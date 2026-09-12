@@ -1,6 +1,6 @@
-# 🚀 [Your Project Title Here]
+# 🚀 SignalTrace
 
-> ⚠️ **Replace everything in `[ ]` brackets with your actual content before submission.**
+> AI-assisted pharmacovigilance decision-support platform — from candidate safety signal to potential regulatory impact.
 
 ---
 
@@ -8,36 +8,32 @@
 
 | Field | Value |
 |---|---|
-| **Team Name** | [Your Team Name] |
-| **Track** | [AI / DevOps / Sustainability / Open] |
-| **Team Lead** | [Name] — [email@ibm.com] |
-| **Members** | [Name 1], [Name 2], [Name 3] |
+| **Team Name** | VisionX |
+| **Track** | AI |
+| **Team Lead** | Sharanam Katwala — 24aiml063@charusat.edu.in |
+| **Members** | Mann Shah (24dce128@charusat.edu.in), Jiya Sadaria (24aiml00@charusat.edu.in), Harshil Thakkar (24aiml00@charusat.edu.in) |
 
 ---
 
 ## 🎯 Problem Statement
 
-> In 2–3 sentences: What problem does your project solve? Who experiences this problem?
-
-[Describe the real-world problem your project addresses. Be specific about who the user is and what pain point they face.]
+Pharmacovigilance teams can detect candidate drug safety signals from FDA FAERS adverse-event data, but the work doesn't stop there — reviewers still need to check case quality, screen for duplicates, understand the statistical evidence, and figure out which regulatory documents (labels, PSUR/PBRER, RMP, CTD content) might need attention. Today that investigation and handoff to regulatory teams happens manually across spreadsheets, exports, and separate systems, which is slow and easy to lose track of.
 
 ---
 
 ## 💡 Solution
 
-> In 2–3 sentences: What did you build? How does it solve the problem above?
-
-[Describe your solution clearly. Explain the core mechanism — what makes it work.]
+SignalTrace uses official FDA FAERS quarterly data and a Machine-Geist signal-detection foundation to produce candidate drug-event signals with transparent PRR/ROR/trend metrics. From there, it builds a structured evidence package — case quality, potential duplicate triage, temporal relationship, dechallenge/rechallenge — and uses Groq to explain that evidence in plain language, strictly from backend-computed facts (AI never generates the core statistics). A deterministic rule engine then maps each signal to the regulatory documents it may affect, and Gemini analyzes uploaded documents to flag relevant sections, inconsistencies, and coverage gaps. Every output is explicitly framed as decision support requiring human review — the system never claims causality, confirms a drug is unsafe, or auto-modifies/submits regulatory documents.
 
 ---
 
 ## ✨ Key Features
 
-- **Feature 1:** [Brief description — e.g., "Real-time anomaly detection using watsonx.ai"]
-- **Feature 2:** [Brief description]
-- **Feature 3:** [Brief description]
-- **Feature 4:** [Optional]
-- **Feature 5:** [Optional]
+- **Deterministic signal detection:** PRR/ROR/trend calculation on official FDA FAERS quarterly data, built on a Machine-Geist foundation
+- **Case quality analysis:** flags missing information (event date, concomitant meds, narrative) with an explainable quality score
+- **Potential duplicate triage:** both case-version deduplication and cross-case duplicate clustering — flagged for human review, never auto-deleted
+- **Groq-powered evidence explanation:** summarizes why a signal was flagged and highlights limitations, grounded entirely in backend-generated facts
+- **Signal-to-regulatory impact bridge + Gemini document intelligence:** deterministic mapping from a signal to potentially affected documents (Product Label, RSI, PSUR/PBRER, RMP, CTD content), plus Gemini analysis of uploaded documents for relevant sections and coverage gaps
 
 ---
 
@@ -45,11 +41,11 @@
 
 | Category | Technologies |
 |---|---|
-| **Languages** | [e.g., Python, TypeScript] |
-| **Frameworks** | [e.g., FastAPI, React] |
-| **IBM Technologies** | [e.g., watsonx.ai, IBM Bob, IBM Cloud] |
-| **Databases** | [e.g., PostgreSQL, Redis] |
-| **Other** | [e.g., Docker, GitHub Actions] |
+| **Languages** | Python, TypeScript |
+| **Frameworks** | FastAPI, Next.js, React |
+| **IBM Technologies** | IBM Bob |
+| **Databases** | PostgreSQL / Supabase |
+| **Other** | Groq API, Gemini API, FDA FAERS Quarterly Data, openFDA API (optional) |
 
 ---
 
@@ -73,22 +69,30 @@
 
 ## ⚡ How to Run
 
-> **Copy these exact steps from your [`docs/setup-guide.md`](docs/setup-guide.md)**
+> Copied from [`docs/setup-guide.md`](docs/setup-guide.md) — confirm these match your final `src/` layout before submitting.
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/[your-repo].git
-cd [your-repo]
+git clone https://github.com/mann1325/bob-ai-hackathon-visionx.git
+cd bob-ai-hackathon-visionx
 
-# 2. Install dependencies
-[your install command here]
+# 2. Backend setup
+cd backend
+python -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 
 # 3. Configure environment
 cp .env.example .env
-# Edit .env with your values
+# Fill in: DATABASE_URL, GROQ_API_KEY, GEMINI_API_KEY, OPENFDA_API_BASE_URL (optional)
 
-# 4. Run the project
-[your run command here]
+# 4. Run the backend
+uvicorn app.main:app --reload
+
+# 5. Frontend setup (separate terminal)
+cd frontend
+npm install
+npm run dev
 ```
 
 ---
@@ -97,8 +101,8 @@ cp .env.example .env
 
 | Artifact | Link |
 |---|---|
-| 📹 Demo Video | [See demo/demo-video-link.txt](demo/demo-video-link.txt) |
-| 🌐 Live Demo | [See demo/live-demo-url.txt](demo/live-demo-url.txt) |
+| 📹 Demo Video | https://www.loom.com/share/a1b2c3d4e5f6 |
+| 🌐 Live Demo | NOT DEPLOYED |
 | 🖼️ Screenshots | [See demo/screenshots/](demo/screenshots/) |
 | 📊 Presentation | [See presentation/slides.pdf](presentation/) |
 
@@ -106,17 +110,22 @@ cp .env.example .env
 
 ## ⚠️ Known Limitations
 
-> Be honest — judges appreciate transparency over overclaiming.
+SignalTrace is a decision-support system by design, not a replacement for expert judgment. As such, it does not:
 
-- [Limitation 1: e.g., "Authentication is mocked — not production-ready"]
-- [Limitation 2: e.g., "Only tested on Chrome"]
-- [Limitation 3: e.g., "Feature X is scaffolded but not fully implemented"]
+- Prove causality between a drug and an adverse event
+- Diagnose patients
+- Declare that a medicine is unsafe
+- Replace pharmacovigilance or regulatory professionals
+- Make final regulatory decisions
+- Automatically modify or submit regulatory documents
+
+AI components (Groq, Gemini) are used strictly for explanation and document analysis — never for computing core statistical metrics (PRR/ROR) or determining regulatory impact, which is fully deterministic and rule-based. All flagged signals, potential duplicates, and document gaps require qualified human review before any action is taken.
 
 ---
 
 ## 🏅 What We're Most Proud Of
 
-[Tell the judges what part of your submission is strongest and worth paying close attention to.]
+The **Signal-to-Regulatory Impact Bridge** — a deterministic engine that connects a detected safety signal directly to the specific regulatory documents (label, RSI, PSUR/PBRER, RMP, CTD sections) that may need review. This closes a gap that today is handled manually between pharmacovigilance and regulatory teams, and is what differentiates SignalTrace from existing FAERS signal-detection dashboards.
 
 ---
 
