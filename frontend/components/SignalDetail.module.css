@@ -1,253 +1,97 @@
 .detailContainer {
+  background: var(--background);
   min-height: 100vh;
-  background-color: #0b0f19;
-  color: #f1f5f9;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  padding: 2rem 3rem;
+  color: var(--foreground);
 }
 
 .header {
-  margin-bottom: 2rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 3rem 4rem;
+  margin-bottom: 3rem;
+  background: var(--navy);
+  box-shadow: 0 4px 20px rgba(0, 19, 108, 0.15);
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1rem;
+  align-items: center;
+  gap: 2rem;
+  border-bottom: 8px solid var(--royal-blue);
 }
 
 .backBtn {
-  background: transparent;
-  border: none;
-  color: #a78bfa;
-  font-size: 0.875rem;
-  font-weight: 500;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius-pill);
   cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  transition: opacity 0.2s;
+  font-size: 0.875rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 .backBtn:hover {
-  opacity: 0.8;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateX(-4px);
 }
 
 .titleSection {
   display: flex;
-  align-items: baseline;
-  gap: 1rem;
+  flex-direction: column;
 }
 
 .drugName {
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-size: 3rem;
   margin: 0;
-  background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.1;
 }
 
 .eventName {
+  color: var(--pastel-cyan);
   font-size: 1.25rem;
-  color: #94a3b8;
+  margin-top: 0.25rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
 }
 
 .statusBadge {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
+  background: var(--pastel-yellow);
+  color: var(--navy-dark);
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius-pill);
+  font-size: 0.875rem;
   text-transform: uppercase;
+  font-weight: 800;
+  margin-left: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.candidate { background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); }
-.under_review { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
-.closed { background: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
+.statusBadge.unscored {
+  background: var(--background-alt);
+  color: var(--text-muted);
+}
 
+/* Base grid structure */
 .gridLayout {
+  padding: 0 4rem 4rem;
   display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 2rem;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 3rem;
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
-.card {
-  background: rgba(30, 41, 59, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.sectionTitle {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #e2e8f0;
-  margin: 0 0 1.5rem 0;
-  letter-spacing: -0.01em;
-}
-
-.metricsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-
-.metric {
-  background: rgba(15, 23, 42, 0.5);
-  padding: 1rem;
-  border-radius: 8px;
+.leftColumn, .rightColumn {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
 }
 
-.metricLabel {
-  font-size: 0.75rem;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.spacer {
+  height: 2.5rem;
 }
 
-.metricValue {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #f8fafc;
-}
-
-.aiFieldGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.priorityIndicator {
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 0.875rem;
-}
-
-.low { color: #4ade80; }
-.medium { color: #fbbf24; }
-.high { color: #f97316; }
-.critical { color: #ef4444; }
-
-.riskBarContainer {
-  height: 1.5rem;
-  background: rgba(15, 23, 42, 0.8);
-  border-radius: 9999px;
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.riskBarItem {
-  height: 100%;
-  background: linear-gradient(90deg, #fbbf24 0%, #ef4444 100%);
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.riskScoreText {
-  position: relative;
-  z-index: 1;
-  margin-left: 1rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  mix-blend-mode: exclusion;
-  color: #fff;
-}
-
-.loadingPulse {
-  color: #64748b;
-  animation: pulse 2s infinite;
-}
-
-.errorText {
-  color: #ef4444;
-}
-
-.paragraphText {
-  margin: 0;
-  color: #e2e8f0;
-  line-height: 1.6;
-}
-
-.uploadSection {
-  margin-bottom: 1.5rem;
-}
-
-.uploadBtn {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
-  color: #fff;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 0.2s;
-  text-align: center;
-}
-
-.uploadBtn:hover {
-  opacity: 0.9;
-}
-
-.hiddenInput {
-  display: none;
-}
-
-.analysisResults {
-  animation: fadeIn 0.5s ease-out;
-}
-
-.subTitle {
-  font-size: 1rem;
-  margin: 0 0 1rem 0;
-  color: #38bdf8;
-}
-
-.statusIndicator {
-  margin-bottom: 1rem;
-  padding: 0.5rem;
-  background: rgba(255,255,255,0.05);
-  border-radius: 6px;
-  font-size: 0.875rem;
-}
-
-.sectionsList {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.sectionItem h4 {
-  margin: 0 0 0.5rem 0;
-  font-size: 0.875rem;
-  color: #94a3b8;
-}
-
-.sectionItem p {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #e2e8f0;
-  line-height: 1.5;
-}
-
-.gapWarning {
-  margin-top: 2rem;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+@media (max-width: 1024px) {
+  .gridLayout {
+    grid-template-columns: 1fr;
+  }
 }

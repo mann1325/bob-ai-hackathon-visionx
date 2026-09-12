@@ -1,5 +1,5 @@
 import { ApiClient } from './client';
-import { Signal, DocumentAnalysis, ExplanationResponse } from '../../shared-schemas/types';
+import { Signal, DocumentAnalysis, ExplanationResponse, CaseQualityMetrics, PotentialDuplicateCandidate } from './types';
 
 // The actual backend URL would be configured in environment variables
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -21,7 +21,7 @@ export class RealAdapter implements ApiClient {
     return response.json();
   }
 
-  async getSignals(): Promise<Signal[]> {
+  async listSignals(): Promise<Signal[]> {
     return this.fetchAs<Signal[]>('/signals');
   }
 
@@ -29,7 +29,7 @@ export class RealAdapter implements ApiClient {
     return this.fetchAs<Signal>(`/signals/${signalId}`);
   }
 
-  async getExplanation(signalId: string): Promise<ExplanationResponse> {
+  async requestExplanation(signalId: string): Promise<ExplanationResponse> {
     return this.fetchAs<ExplanationResponse>(`/signals/${signalId}/explanation`, {
       method: 'POST'
     });
@@ -49,7 +49,7 @@ export class RealAdapter implements ApiClient {
     return response.json();
   }
 
-  async analyzeDocument(documentId: string): Promise<DocumentAnalysis> {
+  async analyzeDocument(documentId: string, signalId: string): Promise<DocumentAnalysis> {
     return this.fetchAs<DocumentAnalysis>(`/documents/${documentId}/analysis`, {
       method: 'POST'
     });
@@ -57,5 +57,13 @@ export class RealAdapter implements ApiClient {
 
   async liveSearch(drug: string): Promise<any> {
     return this.fetchAs<any>(`/live-search?drug=${encodeURIComponent(drug)}`);
+  }
+
+  async getCaseQuality(signalId: string): Promise<CaseQualityMetrics> {
+    return this.fetchAs<CaseQualityMetrics>(`/signals/${signalId}/quality`);
+  }
+
+  async getPotentialDuplicates(signalId: string): Promise<PotentialDuplicateCandidate[]> {
+    return this.fetchAs<PotentialDuplicateCandidate[]>(`/signals/${signalId}/duplicates`);
   }
 }

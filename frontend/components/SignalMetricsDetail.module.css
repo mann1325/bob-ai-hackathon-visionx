@@ -1,0 +1,354 @@
+.detailWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.headerCard {
+  /* No longer used as header in modular layout, keeping for dev route fallback */
+  background: #FFFFFF;
+  border-radius: var(--border-radius-card);
+  padding: 2rem;
+  box-shadow: var(--shadow-diffuse);
+}
+
+.panelsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.evidenceSummaryBox {
+  background: var(--background-alt);
+  padding: 1.5rem 2rem;
+  border-radius: var(--border-radius-card);
+  border-left: 4px solid var(--royal-blue);
+}
+
+.summaryTitle {
+  font-size: 1rem;
+  color: var(--navy);
+  margin: 0 0 0.75rem 0;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.summaryParagraph {
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--navy);
+  margin: 0 0 1rem 0;
+}
+
+.safetyDisclaimer {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  color: #92400E;
+  background: #FEF3C7;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-weight: 600;
+  display: inline-block;
+  margin-top: 0.5rem;
+}
+
+.panelCard {
+  background: #FFFFFF;
+  border-radius: var(--border-radius-card);
+  box-shadow: var(--shadow-diffuse);
+  overflow: auto;
+  resize: both;
+  display: flex;
+  flex-direction: column;
+  min-width: 300px;
+  min-height: 200px;
+}
+
+.panelBanner {
+  padding: 1.5rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.125rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.panelBanner.deterministic {
+  background: var(--pastel-cyan);
+  color: var(--navy-dark);
+}
+
+.panelBanner.mlAssisted {
+  background: var(--pastel-yellow);
+  color: var(--navy-dark);
+}
+
+.panelContent {
+  padding: 2rem;
+  flex: 1;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.metricBlock {
+  display: flex;
+  flex-direction: column;
+  background: var(--background-alt);
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.metricLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.metricValue {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.75rem;
+  color: var(--navy);
+  line-height: 1;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+}
+
+.metricValue.nullState {
+  color: #CBD5E1;
+}
+
+.priorityBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--border-radius-pill);
+  font-size: 0.875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.priorityBadge.critical {
+  background: #FEF2F2;
+  color: #DC2626;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+}
+
+.priorityBadge.high {
+  background: #FFFBEB;
+  color: #D97706;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
+}
+
+.priorityBadge.medium {
+  background: var(--pastel-blue);
+  color: var(--navy-dark);
+  box-shadow: 0 4px 12px rgba(0, 102, 255, 0.2);
+}
+
+.priorityBadge.low {
+  background: var(--background-alt);
+  color: var(--text-muted);
+}
+
+.priorityBadge.unscored {
+  background: var(--background-alt);
+  color: var(--text-muted);
+  border: 1px dashed #CBD5E1;
+}
+
+.expandableSection {
+  background: rgba(0, 19, 108, 0.02);
+  border: 1px solid rgba(0, 19, 108, 0.1);
+  border-radius: 12px;
+  margin-top: 2rem;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.expandBtn {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.expandBtn h3 {
+  font-size: 1rem;
+  color: var(--navy);
+  margin: 0;
+}
+
+.expandBtn span {
+  color: var(--navy);
+  font-size: 0.875rem;
+}
+
+.expandBtn:hover {
+  background: rgba(0, 19, 108, 0.04);
+}
+
+.expandableContent {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  border-top: 1px solid rgba(0, 19, 108, 0.1);
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.smallSkeleton {
+  height: 60px;
+  background: var(--background-alt);
+  border-radius: 8px;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  margin-top: 1.5rem;
+}
+
+.errorText {
+  color: #DC2626;
+  background: #FEF2F2;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  margin-top: 1.5rem;
+}
+
+.emptyText {
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 1rem 0;
+  margin-top: 0.5rem;
+}
+
+.qualityView {
+  margin-top: 1.5rem;
+}
+
+.qualityHeader {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  color: var(--navy);
+}
+
+.explanationText {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.missingList {
+  background: #FFF1F2;
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+}
+
+.missingList strong {
+  color: #BE123C;
+}
+
+.missingList ul {
+  margin: 0.5rem 0 0 0;
+  padding-left: 1.25rem;
+  color: #BE123C;
+}
+
+.dupeList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.dupeCard {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.dupeHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.dupeBadge {
+  background: #FEF3C7;
+  color: #92400E;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--border-radius-pill);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.similarity {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: auto;
+  font-weight: 600;
+}
+
+.provenanceFooter {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem 1.5rem;
+  background: var(--background-alt);
+  border-radius: var(--border-radius-card);
+  border: 1px solid rgba(0, 19, 108, 0.05);
+  margin-top: 0.5rem;
+}
+
+.provTitle {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--navy);
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+}
+
+.provItems {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.provItem {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.provLabel {
+  color: var(--text-muted);
+}
+
+.provValue {
+  color: var(--navy);
+  font-weight: 600;
+}

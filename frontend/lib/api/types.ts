@@ -34,3 +34,16 @@ export interface DocumentAnalysis {
 export interface ExplanationResponse {
   explanation: string;
 }
+
+export interface CaseQualityMetrics {
+  status: 'High' | 'Medium' | 'Low' | 'Pending';
+  completeness_score: number;
+  missing_information: string[];
+  explanation: string;
+}
+
+export interface PotentialDuplicateCandidate {
+  candidate_signal_id: string;
+  similarity_match: string;
+  overlap_reason: string;
+}

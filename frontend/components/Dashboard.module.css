@@ -1,261 +1,46 @@
 .dashboardContainer {
+  background: var(--background);
   min-height: 100vh;
-  background-color: #0b0f19;
-  color: #f1f5f9;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--foreground);
 }
 
 .header {
+  padding: 2rem 4rem;
+  background: var(--navy);
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 3rem;
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  position: sticky;
-  top: 0;
+  align-items: center;
+  /* Flyby organic bottom curve style approximation */
+  border-bottom: 8px solid var(--royal-blue);
+  box-shadow: 0 4px 20px rgba(0, 19, 108, 0.15);
+  position: relative;
   z-index: 10;
 }
 
 .brand {
-  font-size: 1.5rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #a78bfa 0%, #60a5fa 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  letter-spacing: -0.02em;
+  font-family: 'Outfit', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.04em;
 }
 
-.searchForm {
-  display: flex;
-  gap: 0.5rem;
-  width: 100%;
-  max-width: 500px;
-}
-
-.searchInput {
-  flex-grow: 1;
-  padding: 0.625rem 1rem;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-}
-
-.searchInput:focus {
-  outline: none;
-  border-color: #8b5cf6;
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
-}
-
-.searchButton {
-  padding: 0.625rem 1.25rem;
-  border-radius: 8px;
-  border: none;
-  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
-  color: white;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.1s;
-}
-
-.searchButton:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.searchButton:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.searchButton:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.spinner {
-  display: inline-block;
-  width: 1rem;
-  height: 1rem;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-radius: 50%;
-  border-top-color: #fff;
-  animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.dismissibleAlert {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 1.5rem 3rem 0;
-  padding: 1rem 1.5rem;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 8px;
-  color: #fca5a5;
-  animation: slideDown 0.3s ease-out;
-}
-
-.alertContent {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-weight: 500;
-}
-
-.dismissBtn {
-  background: none;
-  border: none;
-  color: inherit;
-  font-size: 1.25rem;
-  cursor: pointer;
-  padding: 0.25rem;
-  line-height: 1;
-}
-
-.dismissBtn:hover {
-  color: #fff;
-}
-
-.searchResultsPanel {
-  margin: 1.5rem 3rem 0;
-  padding: 1.5rem;
-  background: rgba(56, 189, 248, 0.05);
-  border: 1px solid rgba(56, 189, 248, 0.2);
-  border-radius: 12px;
-}
-
-.panelTitle {
-  margin: 0 0 1rem 0;
-  font-size: 1rem;
-  color: #38bdf8;
+.widgetWrapper {
+  width: 500px;
 }
 
 .mainContent {
-  padding: 2rem 3rem;
+  padding: 4rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 5;
 }
 
-.sectionTitle {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #e2e8f0;
-  margin-bottom: 1.5rem;
-  letter-spacing: -0.01em;
-}
-
-.signalsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-}
-
-.signalCard {
-  background: rgba(30, 41, 59, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 1.5rem;
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-}
-
-.signalCard:hover {
-  background: rgba(30, 41, 59, 0.8);
-  border-color: rgba(139, 92, 246, 0.3);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-}
-
-.signalHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.25rem;
-}
-
-.drugName {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #f8fafc;
-  margin: 0;
-}
-
-.statusBadge {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
-  text-transform: uppercase;
-}
-
-.candidate { background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); }
-.under_review { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
-.closed { background: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
-
-.eventName {
-  color: #94a3b8;
-  font-size: 0.875rem;
-  margin: 0 0 1.5rem 0;
-}
-
-.metricsRow {
-  display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.metric {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.metricValue {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #e2e8f0;
-}
-
-.metricLabel {
-  font-size: 0.75rem;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.cardFooter {
-  margin-top: auto;
-}
-
-.viewDetailsBtn {
-  width: 100%;
-  padding: 0.75rem;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.viewDetailsBtn:hover {
-  background: rgba(139, 92, 246, 0.1);
-  border-color: rgba(139, 92, 246, 0.4);
-  color: #c4b5fd;
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+.tableSection {
+  background: #FFFFFF;
+  border-radius: var(--border-radius-card);
+  box-shadow: var(--shadow-diffuse);
+  overflow: hidden;
+  border: 1px solid rgba(0, 19, 108, 0.04);
 }

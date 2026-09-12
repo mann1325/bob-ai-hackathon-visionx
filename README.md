@@ -119,3 +119,16 @@ cp .env.example .env
 [Tell the judges what part of your submission is strongest and worth paying close attention to.]
 
 ---
+
+## 🤖 How IBM Bob Was Used (Frontend Architecture)
+
+During this Hackathon, the **IBM Bob AI Coding Assistant** was leveraged specifically by the frontend engineering team to orchestrate, refine, and bulletproof the React GUI layer of SignalTrace. 
+
+**Key Code Execution by Bob:**
+*   **Component Refactoring**: Automatically decomposed a monolithic dashboard block into six highly isolated, visually uniform React components (utilizing a Consumer Health UI mapping of Native CSS Flex/Grids).
+*   **API Isolation Pattern**: Stripped inline `fetch()` and `axios` network logic directly out of UI components, orchestrating all data flow through a unified `ApiClient` interface.
+*   **Interactive Simulation**: Constructed a fully decoupled, type-safe `MockAdapter` capable of injecting synthetic delays and E2E placeholder data for live demonstration safety. 
+*   **Resiliency & Defenses**: Bob methodically audited UI component life cycles to paint SVG `pulse` skeletal loaders, parse empty data states, and trap arbitrary HTTP crashes within beautifully styled Red graphical banners—ensuring zero unexpected white screens.
+*   **Strict UI Validation**: Iteratively verified against the `tsc --noEmit` and `<NextJS Build>` pipelines, cleaning up lingering React TS prop conflicts for a strict 0-error code freeze.
+
+*(Note: IBM Bob’s actions were severely constrained solely to the presentation, styling, and networking boundaries of the TSX UI layers. All native core backend processing, openFDA queries, LLM integration logics, and PRR metric statistics were externally facilitated by backend/data engineers.)*

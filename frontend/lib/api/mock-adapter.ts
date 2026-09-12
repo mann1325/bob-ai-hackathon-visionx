@@ -1,5 +1,5 @@
 import { ApiClient } from './client';
-import { Signal, DocumentAnalysis, ExplanationResponse } from '../../shared-schemas/types';
+import { Signal, DocumentAnalysis, ExplanationResponse, CaseQualityMetrics, PotentialDuplicateCandidate } from './types';
 
 const MOCK_SIGNALS: Signal[] = [
   {
@@ -24,8 +24,8 @@ const MOCK_SIGNALS: Signal[] = [
     candidate_status: 'candidate',
     ror: null, // Null to test UI resilience
     trend_score: null, 
-    risk_score: 45,
-    priority_level: 'medium',
+    risk_score: null,
+    priority_level: null,
     dataset_version: 'v2.1',
   },
   {
@@ -44,7 +44,7 @@ const MOCK_SIGNALS: Signal[] = [
 ];
 
 export class MockAdapter implements ApiClient {
-  async getSignals(): Promise<Signal[]> {
+  async listSignals(): Promise<Signal[]> {
     return new Promise(resolve => setTimeout(() => resolve(MOCK_SIGNALS), 800));
   }
 
@@ -57,7 +57,7 @@ export class MockAdapter implements ApiClient {
     });
   }
 
-  async getExplanation(signalId: string): Promise<ExplanationResponse> {
+  async requestExplanation(signalId: string): Promise<ExplanationResponse> {
     return new Promise(resolve => {
       setTimeout(() => {
         resolve({
@@ -76,12 +76,12 @@ export class MockAdapter implements ApiClient {
     });
   }
 
-  async analyzeDocument(documentId: string): Promise<DocumentAnalysis> {
+  async analyzeDocument(documentId: string, signalId: string): Promise<DocumentAnalysis> {
     return new Promise(resolve => {
       setTimeout(() => {
         resolve({
           document_id: documentId,
-          signal_id: 'SIG-1001',
+          signal_id: signalId,
           relevant_sections: [
             { section_name: 'Adverse Reactions', relevance_reason: 'Mentions elevated liver enzymes.' }
           ],
@@ -106,6 +106,38 @@ export class MockAdapter implements ApiClient {
           });
         }
       }, 1500);
+    });
+  }
+
+  async getCaseQuality(signalId: string): Promise<CaseQualityMetrics> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          status: 'Medium',
+          completeness_score: 82,
+          missing_information: ['Patient baseline liver enzymes', 'Concomitant herbal supplements'],
+          explanation: 'While temporal association is present, confounder data requires manual chart extraction.'
+        });
+      }, 700);
+    });
+  }
+
+  async getPotentialDuplicates(signalId: string): Promise<PotentialDuplicateCandidate[]> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve([
+          {
+            candidate_signal_id: 'SIG-1044',
+            similarity_match: 'High (89%)',
+            overlap_reason: 'Matching temporal onset and exact patient demographics across two sites.'
+          },
+          {
+            candidate_signal_id: 'SIG-1048',
+            similarity_match: 'Low (42%)',
+            overlap_reason: 'Same adverse event reported by same physician, but different timeframe.'
+          }
+        ]);
+      }, 900);
     });
   }
 }
