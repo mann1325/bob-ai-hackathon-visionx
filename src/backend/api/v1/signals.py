@@ -1,17 +1,27 @@
 import math
-from typing import Optional
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
+from services.explanation_service import generate_signal_explanation
+from services.investigation_service import (
+    get_case_quality_for_signal,
+    get_duplicate_candidates_for_signal,
+)
 from services.signal_service import (
     get_signal_detail,
     get_signal_evidence,
     get_signal_metrics,
     list_signals,
 )
+from shared.schemas.ai import GroqExplanation
 from shared.schemas.common import PaginatedResponse
-from shared.schemas.evidence import EvidenceBundle
+from shared.schemas.evidence import (
+    CaseQualityReport,
+    DuplicateCandidate,
+    EvidenceBundle,
+)
 from shared.schemas.signal import SignalDetail, SignalMetrics, SignalSummary
 
 router = APIRouter(prefix="/signals", tags=["signals"])
@@ -96,3 +106,49 @@ def get_signal_evidence_by_id(
             detail=f"Evidence for signal '{signal_id}' not found.",
         )
     return evidence
+
+
+@router.get("/{signal_id}/case-quality", response_model=CaseQualityReport)
+def get_signal_case_quality(
+    signal_id: str,
+    db: Session = Depends(get_db),
+) -> CaseQualityReport:
+    """Retrieve case quality indicators and flags for a candidate signal."""
+    quality = get_case_quality_for_signal(db, signal_id)
+    if not quality:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Signal '{signal_id}' not found for case quality evaluation.",
+        )
+    return quality
+
+
+@router.get("/{signal_id}/duplicates", response_model=List[DuplicateCandidate])
+def get_signal_duplicates(
+    signal_id: str,
+    db: Session = Depends(get_db),
+) -> List[DuplicateCandidate]:
+    """Retrieve potential duplicate candidates for a signal with similarity rationale."""
+    duplicates = get_duplicate_candidates_for_signal(db, signal_id)
+    if duplicates is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Signal '{signal_id}' not found for duplicate evaluation.",
+        )
+    return duplicates
+
+
+@router.post("/{signal_id}/explain", response_model=GroqExplanation)
+@router.post("/{signal_id}/explanation", response_model=GroqExplanation, include_in_schema=False)
+def explain_signal(
+    signal_id: str,
+    db: Session = Depends(get_db),
+) -> GroqExplanation:
+    """Generate structured evidence explanation using Groq with backend facts only."""
+    explanation = generate_signal_explanation(db, signal_id)
+    if not explanation:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Signal '{signal_id}' not found for explanation.",
+        )
+    return explanation
