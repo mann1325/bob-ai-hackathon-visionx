@@ -116,3 +116,16 @@ class DuplicateCandidateModel(Base, TimestampMixin):
     status: Mapped[str] = mapped_column(
         String(30), nullable=False, default="potential_duplicate"
     )
+
+
+class AISummaryModel(Base, TimestampMixin):
+    __tablename__ = "ai_summaries"
+
+    summary_id: Mapped[str] = mapped_column(String(50), primary_key=True)
+    signal_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    why_flagged: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    limitations: Mapped[List[str]] = mapped_column(JSON, nullable=False, default=list)
+    suggested_questions: Mapped[List[str]] = mapped_column(JSON, nullable=False, default=list)
+    model_used: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    prompt_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
