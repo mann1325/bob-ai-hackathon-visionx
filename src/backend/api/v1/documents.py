@@ -16,6 +16,7 @@ from services.text_extraction_service import (
     CorruptedFileError,
     UnsupportedFormatError,
 )
+from shared.schemas.ai import GeminiAnalysis
 from shared.schemas.document import DocumentUpload
 
 logger = logging.getLogger(__name__)
@@ -110,3 +111,42 @@ def get_document_endpoint(
             detail=f"Document '{document_id}' not found.",
         )
     return doc
+
+
+@router.post(
+    "/{document_id}/analyze",
+    response_model=GeminiAnalysis,
+    summary="Analyze uploaded document against candidate safety signal using Gemini",
+)
+def analyze_document_endpoint(
+    document_id: str,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_app_settings),
+) -> GeminiAnalysis:
+    """
+    Perform AI-assisted document intelligence analysis using Gemini.
+    Extracts relevant safety sections, identifies existing coverage, and flags potential coverage gaps.
+    """
+    from services.document_analysis_service import analyze_document_content
+    return analyze_document_content(db=db, document_id=document_id, settings=settings)
+
+
+@router.get(
+    "/{document_id}/analysis",
+    response_model=GeminiAnalysis,
+    summary="Retrieve stored Gemini analysis result for a document",
+)
+def get_document_analysis_endpoint(
+    document_id: str,
+    db: Session = Depends(get_db),
+) -> GeminiAnalysis:
+    """Retrieve stored Gemini analysis for the specified document."""
+    from services.document_analysis_service import get_document_analysis
+    analysis = get_document_analysis(db=db, document_id=document_id)
+    if not analysis:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No analysis found for document '{document_id}'.",
+        )
+    return analysis
+

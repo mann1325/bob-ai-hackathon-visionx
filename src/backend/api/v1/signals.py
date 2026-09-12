@@ -169,3 +169,23 @@ def get_signal_regulatory_impact(
             detail=f"Signal '{signal_id}' not found for regulatory impact evaluation.",
         )
     return impact
+
+
+@router.get("/{signal_id}/documents")
+def get_signal_documents_endpoint(
+    signal_id: str,
+    db: Session = Depends(get_db),
+):
+    """List all uploaded documents and their analyses associated with a signal."""
+    from services.document_analysis_service import get_documents_for_signal
+    from services.signal_service import get_signal_detail
+
+    signal = get_signal_detail(db, signal_id)
+    if not signal:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Signal '{signal_id}' not found.",
+        )
+
+    return get_documents_for_signal(db, signal_id)
+
