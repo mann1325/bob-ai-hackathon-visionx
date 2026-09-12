@@ -1,79 +1,411 @@
 # Setup Guide
 
-> **This file is read by the automated evaluation pipeline. Be precise and complete.**
+# SignalTrace
 
-## Prerequisites
+## 1. Project Prerequisites
 
-Before you begin, ensure you have the following installed:
+Install:
 
-- [ ] [e.g., Python 3.11+]
-- [ ] [e.g., Node.js 18+]
-- [ ] [e.g., Docker Desktop]
-- [ ] [e.g., An IBM Cloud account with watsonx.ai access]
-
-## Environment Variables
-
-Copy `.env.example` to `.env` and fill in the values:
-
-```bash
-cp .env.example .env
+```text
+Git
+Python 3.11+
+Node.js 20+
 ```
 
-| Variable | Description | Required |
-|---|---|---|
-| `WATSONX_API_KEY` | Your IBM watsonx.ai API key | Yes |
-| `WATSONX_PROJECT_ID` | Your watsonx.ai project ID | Yes |
-| `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `SLACK_WEBHOOK_URL` | Slack webhook for alerts | No |
+Recommended:
 
-## Installation
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/[your-org]/[your-repo].git
-cd [your-repo]
-
-# 2. Install backend dependencies
-[your command — e.g.: pip install -r requirements.txt]
-
-# 3. Install frontend dependencies (if applicable)
-[your command — e.g.: cd frontend && npm install]
-
-# 4. Set up the database (if applicable)
-[your command — e.g.: python manage.py migrate]
+```text
+PostgreSQL or Supabase
+VS Code
+IBM Bob
 ```
 
-## Running the Application
+---
 
-```bash
-# Start the backend
-[your command — e.g.: uvicorn app.main:app --reload]
+# 2. Repository Setup
 
-# Start the frontend (in a separate terminal, if applicable)
-[your command — e.g.: cd frontend && npm run dev]
+The project starts from the selected Machine-Geist signal-detection repository.
+
+Initial workflow:
+
+```text
+Clone Repository
+      ↓
+Open in IBM Bob
+      ↓
+Ask Mode Analysis
+      ↓
+Understand Existing Pipeline
+      ↓
+Plan Mode
+      ↓
+Approve Changes
+      ↓
+Agent Mode Implementation
 ```
 
-The application will be available at: `http://localhost:[PORT]`
+Do not begin by immediately rewriting the repository.
 
-## Running Tests
+---
 
-```bash
-[your test command — e.g.: pytest tests/ -v]
+# 3. Suggested Project Structure
+
+```text
+signaltrace/
+│
+├── signal_engine/
+│   ├── ingestion/
+│   ├── processing/
+│   ├── metrics/
+│   └── ranking/
+│
+├── backend/
+│   ├── api/
+│   ├── services/
+│   ├── rules/
+│   ├── ai/
+│   └── database/
+│
+├── frontend/
+│
+├── data/
+│   ├── raw/
+│   └── processed/
+│
+├── docs/
+│   ├── problem-statement.md
+│   ├── solution-overview.md
+│   ├── architecture.md
+│   ├── setup-guide.md
+│   └── PRD.md
+│
+└── README.md
 ```
 
-## Quick Demo (Optional)
+The exact structure should respect useful existing repository architecture.
 
-If you have a demo script or sample data to showcase the project quickly:
+---
 
-```bash
-[e.g.: python demo/seed_demo_data.py]
-[e.g.: open http://localhost:8000/demo]
+# 4. FDA Quarterly Data Setup
+
+The primary signal engine uses official FDA FAERS quarterly data.
+
+Recommended workflow:
+
+```text
+Quarterly Data Download
+        ↓
+Store Raw Files
+        ↓
+Parse / Normalize
+        ↓
+Load into Database
+        ↓
+Create Drug–Event Dataset
+        ↓
+Run Signal Detection
 ```
 
-## Troubleshooting
+Keep metadata about:
 
-| Issue | Solution |
-|---|---|
-| [e.g., `ModuleNotFoundError`] | [e.g., Run `pip install -r requirements.txt` again] |
-| [e.g., Database connection refused] | [e.g., Ensure PostgreSQL is running: `docker compose up db`] |
-| [e.g., watsonx.ai 401 error] | [e.g., Check `WATSONX_API_KEY` in your `.env` file] |
+- Dataset release.
+- Quarter.
+- Import date.
+- Processing version.
+
+This helps reproducibility.
+
+---
+
+# 5. Signal Engine Setup
+
+Use the Machine-Geist repository as the starting point.
+
+Before changing signal logic:
+
+## Step 1 — Ask Mode
+
+Example:
+
+> Analyze this repository and explain the complete FAERS data pipeline, important modules, data models, signal-detection calculations, inputs, outputs, and reusable components. Do not modify code.
+
+## Step 2 — Plan Mode
+
+Example:
+
+> We are extending this repository into SignalTrace. Keep the existing signal-detection foundation where appropriate. Create a phased plan for adding a web application, evidence investigation, case-quality analysis, potential duplicate triage, Groq explanation, regulatory rules, Gemini document analysis, and optional openFDA search. Identify every file likely to change. Do not modify code.
+
+## Step 3 — Team Review
+
+Review:
+
+- Reusable code.
+- Data assumptions.
+- Planned changes.
+- Risks.
+- File ownership.
+
+## Step 4 — Agent Mode
+
+Implement only the approved feature.
+
+---
+
+# 6. Backend Setup
+
+Recommended:
+
+```text
+FastAPI
+Python
+```
+
+Typical setup:
+
+```bash
+cd backend
+python -m venv venv
+```
+
+Windows:
+
+```bash
+venv\Scripts\activate
+```
+
+macOS/Linux:
+
+```bash
+source venv/bin/activate
+```
+
+Install:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+---
+
+# 7. Frontend Setup
+
+Recommended:
+
+```text
+Next.js
+React
+TypeScript
+```
+
+Typical setup:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+---
+
+# 8. Environment Variables
+
+Example:
+
+```env
+DATABASE_URL=your_database_connection
+
+GROQ_API_KEY=your_groq_key
+
+GEMINI_API_KEY=your_gemini_key
+
+OPENFDA_API_BASE_URL=https://api.fda.gov
+OPENFDA_API_KEY=
+```
+
+openFDA credentials are optional for the primary signal engine.
+
+Never commit `.env`.
+
+---
+
+# 9. Development Phases
+
+## Phase 1 — Repository Understanding
+
+Use IBM Bob Ask Mode.
+
+Output:
+
+- Architecture map.
+- Signal pipeline understanding.
+- Reusable components.
+- Risk list.
+
+## Phase 2 — Dataset Pipeline
+
+Set up:
+
+```text
+FDA Quarterly Data
+       ↓
+Import
+       ↓
+Normalization
+       ↓
+Database / Processed Dataset
+```
+
+## Phase 3 — Signal Engine
+
+Validate:
+
+```text
+Drug–Event Pairs
+PRR
+ROR
+Counts
+Trends
+Ranking
+```
+
+## Phase 4 — SignalTrace API
+
+Expose:
+
+- Drug search.
+- Candidate signals.
+- Signal details.
+- Evidence data.
+
+## Phase 5 — Frontend
+
+Build:
+
+- Dashboard.
+- Signal table.
+- Signal detail view.
+
+## Phase 6 — Investigation Features
+
+Add:
+
+- Case quality.
+- Potential duplicate triage.
+
+## Phase 7 — Groq
+
+Add AI explanation using backend-generated facts.
+
+## Phase 8 — Regulatory Rules
+
+Add deterministic signal-to-document mapping.
+
+## Phase 9 — Gemini
+
+Add document upload and analysis.
+
+## Phase 10 — Optional openFDA
+
+Add as a separate live/search feature.
+
+---
+
+# 10. Team Collaboration Rules
+
+- One owner per major feature.
+- Do not edit the same file simultaneously.
+- Shared schemas must be agreed before changing.
+- Do not silently modify API contracts.
+- Use branches.
+- Review before merging.
+- Keep commits small and logical.
+
+---
+
+# 11. Testing Checklist
+
+## Quarterly Data
+
+```text
+[ ] Dataset imports correctly
+[ ] Quarter metadata is stored
+[ ] Data normalization works
+```
+
+## Signal Engine
+
+```text
+[ ] Drug-event pairs work
+[ ] PRR is correct
+[ ] ROR is correct where implemented
+[ ] Counts are correct
+[ ] Ranking works
+```
+
+## Investigation
+
+```text
+[ ] Quality issues are identified
+[ ] Potential duplicates are explainable
+[ ] No reports are automatically deleted
+```
+
+## AI
+
+```text
+[ ] Groq receives structured facts
+[ ] Groq does not calculate core metrics
+[ ] Gemini identifies relevant content
+[ ] AI output is clearly labelled as assistance
+```
+
+## openFDA
+
+```text
+[ ] Optional search works
+[ ] API failure does not break core signal engine
+```
+
+---
+
+# 12. Final Demo Flow
+
+```text
+1. Select a Drug
+        ↓
+2. Show Historical FDA Quarterly Data Basis
+        ↓
+3. Show Candidate Signal
+        ↓
+4. Show PRR / ROR / Counts / Trend
+        ↓
+5. Show Case Quality and Duplicate Triage
+        ↓
+6. Groq Explains Evidence
+        ↓
+7. Regulatory Rule Engine Maps Review Areas
+        ↓
+8. Upload Regulatory / Safety Document
+        ↓
+9. Gemini Finds Relevant Content
+        ↓
+10. Show Potential Coverage Gap
+        ↓
+11. HUMAN REVIEW REQUIRED
+```
+
+Optional demonstration:
+
+```text
+User Search
+      ↓
+openFDA
+      ↓
+Live / Quick Data Exploration
+```
