@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
+from rules.engine import evaluate_regulatory_impact
 from services.explanation_service import generate_signal_explanation
 from services.investigation_service import (
     get_case_quality_for_signal,
@@ -22,6 +23,7 @@ from shared.schemas.evidence import (
     DuplicateCandidate,
     EvidenceBundle,
 )
+from shared.schemas.regulatory import RegulatoryImpact
 from shared.schemas.signal import SignalDetail, SignalMetrics, SignalSummary
 
 router = APIRouter(prefix="/signals", tags=["signals"])
@@ -152,3 +154,18 @@ def explain_signal(
             detail=f"Signal '{signal_id}' not found for explanation.",
         )
     return explanation
+
+
+@router.get("/{signal_id}/regulatory-impact", response_model=RegulatoryImpact)
+def get_signal_regulatory_impact(
+    signal_id: str,
+    db: Session = Depends(get_db),
+) -> RegulatoryImpact:
+    """Evaluate deterministic regulatory impact and return potential review areas."""
+    impact = evaluate_regulatory_impact(db, signal_id)
+    if not impact:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Signal '{signal_id}' not found for regulatory impact evaluation.",
+        )
+    return impact
