@@ -14,15 +14,15 @@ export default function Home() {
   const [fadeSplash, setFadeSplash] = useState(false);
 
   useEffect(() => {
-    // Hold splash for 1.5 seconds, then fade out
+    // Hold splash for 3.5 seconds, then fade out
     const fadeTimer = setTimeout(() => {
       setFadeSplash(true);
-    }, 1500);
+    }, 3500);
 
     // Completely unmount after fade transition (0.8s)
     const unmountTimer = setTimeout(() => {
       setShowSplash(false);
-    }, 2300);
+    }, 4300);
 
     return () => {
       clearTimeout(fadeTimer);
@@ -34,8 +34,20 @@ export default function Home() {
     <>
       {showSplash && (
         <div className={`${styles.splashContainer} ${fadeSplash ? styles.splashFadeOut : ''}`}>
-          <div className={styles.splashLogo}>
-            SignalTrace
+          <div className={styles.splashLogoContainer}>
+            <div className={styles.content}>
+              <div className={styles.pill}>
+                <div className={styles.medicine}>
+                  <i /><i /><i /><i /><i /><i /><i /><i /><i /><i />
+                  <i /><i /><i /><i /><i /><i /><i /><i /><i /><i />
+                </div>
+                <div className={styles.side}></div>
+                <div className={styles.side}></div>
+              </div>
+            </div>
+            <div className={styles.splashBrand}>
+              SignalTrace
+            </div>
           </div>
         </div>
       )}
