@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     openfda_api_base_url: str = "https://api.fda.gov"
     openfda_api_key: Optional[str] = None
 
+    # Document upload settings (Phase 6)
+    upload_dir: str = "data/uploads"
+    max_upload_size_bytes: int = 10 * 1024 * 1024  # 10 MB limit
+
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     @property

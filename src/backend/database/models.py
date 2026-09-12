@@ -129,3 +129,19 @@ class AISummaryModel(Base, TimestampMixin):
     suggested_questions: Mapped[List[str]] = mapped_column(JSON, nullable=False, default=list)
     model_used: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     prompt_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+
+
+class DocumentUploadModel(Base, TimestampMixin):
+    __tablename__ = "document_uploads"
+
+    document_id: Mapped[str] = mapped_column(String(50), primary_key=True)
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    file_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    file_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    signal_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, index=True)
+    extracted_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    extracted_text_preview: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(30), nullable=False, default="uploaded")
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    storage_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+
