@@ -145,3 +145,20 @@ class DocumentUploadModel(Base, TimestampMixin):
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     storage_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
+
+class DocumentAnalysisModel(Base, TimestampMixin):
+    __tablename__ = "document_analysis"
+
+    analysis_id: Mapped[str] = mapped_column(String(50), primary_key=True)
+    document_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    signal_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    relevant_sections: Mapped[List[Dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
+    existing_related_content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    potential_coverage_gap: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    analysis_status: Mapped[str] = mapped_column(String(30), nullable=False, default="completed")
+    human_review_required: Mapped[bool] = mapped_column(nullable=False, default=True)
+    model_used: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    prompt_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    disclaimer: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
