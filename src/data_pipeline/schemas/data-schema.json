@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SignalTrace Normalized Report",
+  "schema_version": "1.0.0",
+  "type": "object",
+  "required": [
+    "report_id",
+    "drug_name",
+    "reactions",
+    "report_quarter"
+  ],
+  "properties": {
+    "report_id": {
+      "type": "string"
+    },
+    "drug_name": {
+      "type": "string"
+    },
+    "reactions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "patient_age": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "patient_sex": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "event_date": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "report_quarter": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "const": "FDA_FAERS"
+    }
+  },
+  "additionalProperties": false
+}
