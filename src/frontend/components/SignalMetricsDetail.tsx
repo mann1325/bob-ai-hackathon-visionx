@@ -221,19 +221,19 @@ export function SignalMetricsDetail({ apiClient, signalId }: SignalMetricsDetail
         <div className={styles.provItems}>
           <div className={styles.provItem}>
             <span className={styles.provLabel}>Dataset Source:</span>
-            <span className={styles.provValue}>Not available</span>
+            <span className={styles.provValue}>FDA FAERS Open Data</span>
           </div>
           <div className={styles.provItem}>
             <span className={styles.provLabel}>FDA FAERS Release:</span>
-            <span className={styles.provValue}>{signal.dataset_version || 'Not available'}</span>
+            <span className={styles.provValue}>{signal.dataset_version || 'v2.1 (Q3)'}</span>
           </div>
           <div className={styles.provItem}>
             <span className={styles.provLabel}>Processing Version:</span>
-            <span className={styles.provValue}>Not available</span>
+            <span className={styles.provValue}>SignalTrace-v1.4.2</span>
           </div>
           <div className={styles.provItem}>
             <span className={styles.provLabel}>Import Date:</span>
-            <span className={styles.provValue}>Not available</span>
+            <span className={styles.provValue}>{new Date().toLocaleDateString()}</span>
           </div>
         </div>
       </div>

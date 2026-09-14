@@ -189,3 +189,10 @@
   font-weight: 600;
   font-size: 1rem;
 }
+
+.resultsArea {
+  color: #FFFFFF;
+  margin-top: 1rem;
+  line-height: 1.5;
+}
+
