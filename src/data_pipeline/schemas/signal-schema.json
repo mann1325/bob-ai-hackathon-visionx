@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SignalTrace Candidate Signal",
+  "schema_version": "1.0.0",
+  "type": "object",
+  "required": [
+    "signal_id",
+    "drug_name",
+    "event_name",
+    "supporting_report_count",
+    "prr",
+    "candidate_status"
+  ],
+  "properties": {
+    "signal_id": {
+      "type": "string"
+    },
+    "drug_name": {
+      "type": "string"
+    },
+    "event_name": {
+      "type": "string"
+    },
+    "supporting_report_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "prr": {
+      "type": "number"
+    },
+    "ror": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "trend_score": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "risk_score": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "priority_level": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical",
+        null
+      ]
+    },
+    "candidate_status": {
+      "type": "string",
+      "enum": [
+        "candidate",
+        "under_review",
+        "closed"
+      ]
+    },
+    "dataset_version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}
