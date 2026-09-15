@@ -20,7 +20,7 @@ interface DuplicateReviewDetails {
 
 function parseDuplicateReviewDetails(rationale: string): DuplicateReviewDetails {
   const match = rationale.match(
-    /share drug '([^']+)', event '([^']+)', patient age ([^,]+), sex '([^']+)', and event date (\d{8})/,
+    /share drug '([^']+)', event '([^']+)', patient age ([^,]+), sex '([^']+)', and event date (\d{4}-\d{2}-\d{2}|\d{8})/,
   );
 
   if (!match) {
@@ -28,12 +28,11 @@ function parseDuplicateReviewDetails(rationale: string): DuplicateReviewDetails 
   }
 
   const [, drug, event, age, sex, rawEventDate] = match;
+  const normalizedEventDate = rawEventDate.includes('-')
+    ? rawEventDate
+    : `${rawEventDate.slice(0, 4)}-${rawEventDate.slice(4, 6)}-${rawEventDate.slice(6, 8)}`;
   const eventDate = rawEventDate
-    ? new Date(Date.UTC(
-        Number(rawEventDate.slice(0, 4)),
-        Number(rawEventDate.slice(4, 6)) - 1,
-        Number(rawEventDate.slice(6, 8)),
-      )).toLocaleDateString('en-GB', {
+    ? new Date(`${normalizedEventDate}T00:00:00Z`).toLocaleDateString('en-GB', {
         day: '2-digit',
         month: 'short',
         year: 'numeric',
