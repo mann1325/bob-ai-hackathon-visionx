@@ -45,6 +45,7 @@ BOUNDARIES
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import logging
 import math
@@ -62,6 +63,7 @@ logger = logging.getLogger(__name__)
 
 _VALID_PRIORITY_LEVELS = frozenset({"low", "medium", "high", "critical", None})
 _VALID_STATUSES = frozenset({"candidate", "under_review", "closed"})
+_DEFAULT_BATCH_SIZE = 1000
 
 
 def _safe_float(v) -> Optional[float]:
@@ -146,6 +148,71 @@ def _build_metrics_model(signal_id: str, row: Dict[str, Any], models_module):
     )
 
 
+def _signal_values(rec: Dict[str, Any]) -> Dict[str, Any]:
+    """Return the database values for one validated signal record."""
+    return {
+        "signal_id": rec["signal_id"],
+        "drug_name": rec["drug_name"],
+        "event_name": rec["event_name"],
+        "supporting_report_count": _safe_int(rec.get("supporting_report_count")) or 0,
+        "prr": _safe_float(rec["prr"]),
+        "ror": _safe_float(rec.get("ror")),
+        "trend_score": _safe_float(rec.get("trend_score")),
+        "risk_score": _safe_float(rec.get("risk_score")),
+        "priority_level": rec.get("priority_level"),
+        "candidate_status": rec.get("candidate_status", "candidate"),
+        "dataset_version": rec.get("dataset_version"),
+        "rank": _safe_int(rec.get("rank")),
+    }
+
+
+def _metrics_values(signal_id: str, row: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, Any]:
+    """Return the database values for one metrics record."""
+    return {
+        "signal_id": signal_id,
+        "prr": _safe_float(rec.get("prr")) or 0.0,
+        "ror": _safe_float(rec.get("ror")),
+        "report_count": _safe_int(row.get("a")) or 0,
+        "contingency_table": {
+            key: _safe_int(row.get(key))
+            for key in ("a", "b", "c", "d")
+            if row.get(key) is not None
+        } or None,
+        "trend_data": None,
+        "chi_square": _safe_float(row.get("chi_square")),
+    }
+
+
+def _upsert_batch(db, model, rows: List[Dict[str, Any]], dialect_name: str) -> None:
+    """Upsert one batch using native conflict handling where available."""
+    if not rows:
+        return
+
+    if dialect_name == "postgresql":
+        from sqlalchemy.dialects.postgresql import insert
+    elif dialect_name == "sqlite":
+        from sqlalchemy.dialects.sqlite import insert
+    else:
+        for row in rows:
+            db.merge(model(**row))
+        return
+
+    statement = insert(model.__table__).values(rows)
+    primary_key = model.__table__.primary_key.columns.keys()[0]
+    update_values = {
+        column.name: statement.excluded[column.name]
+        for column in model.__table__.columns
+        if column.name != primary_key and column.name not in {"created_at", "updated_at"}
+    }
+    update_values["updated_at"] = statement.excluded.updated_at
+    db.execute(
+        statement.on_conflict_do_update(
+            index_elements=[primary_key],
+            set_=update_values,
+        )
+    )
+
+
 def import_enriched_signals(
     enriched_path: Path,
     metrics_path: Optional[Path],
@@ -183,24 +250,42 @@ def import_enriched_signals(
     logger.info("Connecting to database...")
     engine = create_engine(database_url, pool_pre_ping=True)
     SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+    dialect_name = engine.dialect.name
 
     logger.info("Loading enriched signals from %s", enriched_path)
     with enriched_path.open("r", encoding="utf-8") as fh:
         signals: List[Dict[str, Any]] = json.load(fh)
     logger.info("Loaded %d enriched signals.", len(signals))
 
+    signal_ids = {str(rec.get("signal_id")) for rec in signals if rec.get("signal_id")}
     metrics_map: Dict[str, Dict[str, Any]] = {}
     if metrics_path and metrics_path.is_file():
-        import pandas as pd
-        df = pd.read_csv(metrics_path, low_memory=False)
-        if "signal_id" in df.columns:
-            for _, row in df.iterrows():
-                metrics_map[str(row["signal_id"])] = row.to_dict()
-            logger.info("Loaded metrics for %d signals.", len(metrics_map))
+        with metrics_path.open("r", encoding="utf-8", newline="") as fh:
+            reader = csv.DictReader(fh)
+            if reader.fieldnames and "signal_id" in reader.fieldnames:
+                for row in reader:
+                    sid = str(row["signal_id"])
+                    if sid in signal_ids:
+                        metrics_map[sid] = row
+                logger.info("Loaded metrics for %d signals.", len(metrics_map))
 
     counters = {"total": len(signals), "inserted_or_updated": 0, "skipped": 0, "errors": 0}
 
     db = SessionLocal()
+    signal_batch: Dict[str, Dict[str, Any]] = {}
+    metrics_batch: Dict[str, Dict[str, Any]] = {}
+
+    def flush_batch() -> None:
+        if dry_run:
+            signal_batch.clear()
+            metrics_batch.clear()
+            return
+        _upsert_batch(db, SignalModel, list(signal_batch.values()), dialect_name)
+        _upsert_batch(db, SignalMetricsModel, list(metrics_batch.values()), dialect_name)
+        db.commit()
+        signal_batch.clear()
+        metrics_batch.clear()
+
     try:
         for idx, rec in enumerate(signals):
             try:
@@ -213,22 +298,23 @@ def import_enriched_signals(
 
             signal_obj = _build_signal_model(rec, models_module)
 
-            if not dry_run:
-                db.merge(signal_obj)
-
             # Upsert signal_metrics row if data is available
             sid = rec["signal_id"]
             m = metrics_map.get(sid)
             if m:
                 m_with_prr = {**m, "prr": rec.get("prr"), "ror": rec.get("ror")}
-                metrics_obj = _build_metrics_model(sid, m_with_prr, models_module)
-                if not dry_run:
-                    db.merge(metrics_obj)
+                _build_metrics_model(sid, m_with_prr, models_module)
+                metrics_batch[sid] = _metrics_values(sid, m_with_prr, rec)
+
+            signal_batch[sid] = _signal_values(rec)
 
             counters["inserted_or_updated"] += 1
 
+            if len(signal_batch) >= _DEFAULT_BATCH_SIZE:
+                flush_batch()
+
         if not dry_run:
-            db.commit()
+            flush_batch()
             logger.info("Committed %d records.", counters["inserted_or_updated"])
         else:
             logger.info("Dry run — no changes committed.")

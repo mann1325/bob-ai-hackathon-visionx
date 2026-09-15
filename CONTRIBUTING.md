@@ -50,7 +50,7 @@ Fill in all four documentation files:
 
 ### 3d. `src/`
 - Put all your source code inside [`src/`](src/)
-- Copy [`src/.env.example`](src/.env.example) and add your environment variables to it
+- Copy [`src/frontend/.env.example`](src/frontend/.env.example) and add your frontend environment variables to it
 - **Never commit a real `.env` file** — it is already in `.gitignore`
 
 ### 3e. `demo/`
@@ -61,7 +61,7 @@ Fill in all four documentation files:
 | [`demo/screenshots/`](demo/screenshots/) | Add 3+ screenshots named `01-*.png`, `02-*.png`, etc. |
 
 ### 3f. `presentation/`
-- Add your slide deck as [`presentation/slides.pdf`](presentation/) (preferred) or `.pptx`
+- Add your slide deck as [`presentation/SignalTrace.pdf`](presentation/SignalTrace.pdf) (preferred) or `.pptx`
 
 ---
 
@@ -109,7 +109,7 @@ Once validation passes:
 - [ ] `src/` — all source code committed (no `node_modules`, no `.env`)
 - [ ] `demo/demo-video-link.txt` — real video URL (3–5 min showing the app working)
 - [ ] `demo/screenshots/` — at least 3 screenshots of the running application
-- [ ] `presentation/slides.pdf` — slide deck present
+- [ ] `presentation/SignalTrace.pdf` — slide deck present
 - [ ] GitHub Actions **✅ Validate Submission** is green
 - [ ] Repository is **Public**
 - [ ] Entry form submitted before the deadline
