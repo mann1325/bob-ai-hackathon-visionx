@@ -2,7 +2,7 @@ import { ApiClient } from './client';
 import { SignalDetail, SignalListParams, SignalListResponse, DocumentAnalysis, DocumentUpload, GroqExplanation, CaseQualityReport, DuplicateCandidate, LiveSearchResponse, RegulatoryImpact } from './types';
 
 // The actual backend URL would be configured in environment variables
-const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://signaltrace-backend.onrender.com';
 const normalizedApiUrl = configuredApiUrl.replace(/\/+$/, '');
 const API_BASE_URL = normalizedApiUrl.endsWith('/api/v1')
   ? normalizedApiUrl
@@ -90,7 +90,17 @@ export class RealAdapter implements ApiClient {
   }
 
   async getCaseQuality(signalId: string): Promise<CaseQualityReport> {
-    return this.fetchAs<CaseQualityReport>(`/signals/${signalId}/case-quality`);
+    const response = await this.fetchAs<CaseQualityReport>(`/signals/${signalId}/case-quality`);
+    return {
+      signal_id: response.signal_id,
+      total_reports: response.total_reports,
+      missing_age_count: response.missing_age_count,
+      missing_sex_count: response.missing_sex_count,
+      missing_date_count: response.missing_date_count,
+      quality_score: response.quality_score,
+      quality_flags: response.quality_flags,
+      indicators: response.indicators,
+    };
   }
 
   async getPotentialDuplicates(signalId: string): Promise<DuplicateCandidate[]> {
