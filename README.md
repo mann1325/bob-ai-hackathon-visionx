@@ -101,10 +101,10 @@ npm run dev
 
 | Artifact | Link |
 |---|---|
-| 📹 Demo Video | https://www.loom.com/share/a1b2c3d4e5f6 |
-| 🌐 Live Demo | NOT DEPLOYED |
+| 📹 Demo Video | [Watch the SignalTrace demo on Google Drive](https://drive.google.com/drive/folders/1kjd-oVTBjvaeNTaoO-1QyQ2mQpKUNbaq?usp=sharing) |
+| 🌐 Live Demo | [Open SignalTrace](https://signaltrace-five.vercel.app/) |
 | 🖼️ Screenshots | [See demo/screenshots/](demo/screenshots/) |
-| 📊 Presentation | [See presentation/slides.pdf](presentation/) |
+| 📊 Presentation | [Download the SignalTrace slide deck](presentation/slides.pdf) |
 
 ---
 

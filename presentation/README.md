@@ -1,6 +1,25 @@
 # Presentation
 
-Place your slide deck in this folder.
+## SignalTrace
+
+SignalTrace is an AI-assisted pharmacovigilance decision-support platform built by **VisionX** for the **AI** track.
+
+### Team
+
+| Role | Name | Email |
+|---|---|---|
+| Team Lead | Sharanam Katwala | 24aiml063@charusat.edu.in |
+| Member | Mann Shah | 24dce128@charusat.edu.in |
+| Member | Jiya Sadaria | 24aiml054@charusat.edu.in |
+| Member | Harshil Thakkar | 24aiml068@charusat.edu.in |
+
+### Project Links
+
+- [Live demo](https://signaltrace-five.vercel.app/)
+- [Demo video on Google Drive](https://drive.google.com/drive/folders/1kjd-oVTBjvaeNTaoO-1QyQ2mQpKUNbaq?usp=sharing)
+- [Source repository](https://github.com/mann1325/bob-ai-hackathon-visionx)
+
+The slide deck is available as [slides.pdf](slides.pdf).
 
 ## Accepted Formats
 

@@ -19,8 +19,8 @@ The judges depend on this structure to review your entry — deviations may affe
 ## Step 2 — Clone Your Fork Locally
 
 ```bash
-git clone https://github.com/[your-org]/bob-ai-hackathon-[your-team-name].git
-cd bob-ai-hackathon-[your-team-name]
+git clone https://github.com/mann1325/bob-ai-hackathon-visionx.git
+cd bob-ai-hackathon-visionx
 ```
 
 ---
@@ -89,7 +89,7 @@ yq '.' submission.yaml   # checks YAML is valid
 Once validation passes:
 
 1. Copy your repository URL:
-   `https://github.com/[your-org]/bob-ai-hackathon-[your-team-name]`
+   `https://github.com/mann1325/bob-ai-hackathon-visionx`
 
 2. Submit it via the **official entry form** at:
    `[ORGANIZER: INSERT FORM URL HERE]`
