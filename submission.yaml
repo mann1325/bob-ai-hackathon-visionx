@@ -13,14 +13,14 @@ team:
   track: "AI"                          # REQUIRED — one of: AI | DevOps | Sustainability | Open
   lead:
     name: "Sharanam Katwala"           # REQUIRED
-    email: "TBD"                       # REQUIRED — replace with real email before submitting
+    email: "24aiml063@charusat.edu.in"                       # REQUIRED — replace with real email before submitting
   members:
     - name: "Mann Shah"
-      email: "TBD"
+      email: "24dce128@charusat.edu.in"
     - name: "Jiya Sadaria"
-      email: "TBD"
+      email: "24aiml054@charusat.edu.in"
     - name: "Harshil Thakkar"
-      email: "TBD"
+      email: "24aiml068@charusat.edu.in"
 
 submission:
   title: "SignalTrace"                 # REQUIRED
@@ -34,15 +34,17 @@ submission:
 
   solution_summary: >                  # REQUIRED
     SignalTrace is an AI-assisted pharmacovigilance decision-support platform
-    that uses official FDA FAERS quarterly data and a Machine-Geist
-    signal-detection foundation to detect candidate drug-event safety
+    that uses official FDA FAERS quarterly data and a deterministic
+    SignalTrace-owned signal-detection pipeline; project materials describe a
+    Machine-Geist foundation, but its provenance is currently unverified. The
+    system detects candidate drug-event safety
     signals, then connects them to a structured evidence investigation
     workspace, Groq-generated explanations, deterministic regulatory-document
     mapping, and Gemini-based document analysis — keeping qualified human
     review at the center of every decision.
 
   key_features:                        # REQUIRED
-    - "Deterministic signal detection (PRR/ROR/trend) on official FDA FAERS quarterly data, built on a Machine-Geist foundation"
+    - "Deterministic signal detection (PRR/ROR/trend) on official FDA FAERS quarterly data; Machine-Geist provenance is unverified"
     - "Case quality analysis and potential duplicate triage (version-level and cross-case) with no automatic deletion"
     - "Groq-powered evidence explanation grounded in backend-computed statistical facts"
     - "Deterministic signal-to-regulatory-document mapping (Product Label, RSI, PSUR/PBRER, RMP, CTD content)"

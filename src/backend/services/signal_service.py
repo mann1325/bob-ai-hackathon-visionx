@@ -7,6 +7,7 @@ from database.models import (
     CaseQualityModel,
     DrugEventPairModel,
     DuplicateCandidateModel,
+    FAERSQuarterlyMetadataModel,
     ProcessedReportModel,
     SignalMetricsModel,
     SignalModel,
@@ -130,6 +131,21 @@ def get_signal_detail(db: Session, signal_id: str) -> Optional[SignalDetail]:
         return None
 
     metrics = get_signal_metrics(db, signal_id)
+    dataset_metadata = None
+    dataset_source = None
+    if r.dataset_version:
+        dataset_metadata = db.scalars(
+            select(FAERSQuarterlyMetadataModel).where(
+                FAERSQuarterlyMetadataModel.release_id == r.dataset_version
+            )
+        ).first()
+        source = db.scalars(
+            select(ProcessedReportModel.source)
+            .where(ProcessedReportModel.report_quarter == r.dataset_version)
+            .limit(1)
+        ).first()
+        if source:
+            dataset_source = source.replace("_", " ")
 
     return SignalDetail(
         signal_id=r.signal_id,
@@ -143,6 +159,9 @@ def get_signal_detail(db: Session, signal_id: str) -> Optional[SignalDetail]:
         priority_level=r.priority_level,
         candidate_status=r.candidate_status,
         dataset_version=r.dataset_version,
+        dataset_source=dataset_source,
+        processing_version=(dataset_metadata.processing_version if dataset_metadata else None),
+        import_date=(dataset_metadata.import_date if dataset_metadata else None),
         metrics=metrics,
         known_limitations=r.known_limitations or [
             "FAERS reports represent spontaneous reports and do not prove causality.",

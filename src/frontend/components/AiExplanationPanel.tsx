@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { ApiClient } from '../lib/api/client';
-import { ExplanationResponse } from '../lib/api/types';
+import { GroqExplanation } from '../lib/api/types';
 import styles from './AiExplanationPanel.module.css';
 
 interface AiExplanationPanelProps {
@@ -11,9 +11,18 @@ interface AiExplanationPanelProps {
 }
 
 export function AiExplanationPanel({ apiClient, signalId }: AiExplanationPanelProps) {
-  const [explanation, setExplanation] = useState<ExplanationResponse | null>(null);
+  const [explanation, setExplanation] = useState<GroqExplanation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [inferenceId, setInferenceId] = useState(`${signalId}-GEN-PENDING`);
+
+  useEffect(() => {
+    const updateInferenceId = window.setTimeout(() => {
+      setInferenceId(`${signalId}-GEN-${Date.now().toString().slice(-6)}`);
+    }, 0);
+
+    return () => window.clearTimeout(updateInferenceId);
+  }, [signalId]);
 
   const fetchExplanation = useCallback(async () => {
     setIsLoading(true);
@@ -21,15 +30,13 @@ export function AiExplanationPanel({ apiClient, signalId }: AiExplanationPanelPr
     try {
       const result = await apiClient.requestExplanation(signalId);
       setExplanation(result);
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Inference Engine Unavailable - Retry';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Inference Engine Unavailable - Retry';
       setError(`Generative inference failed: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
   }, [apiClient, signalId]);
-
-  // Removed useEffect to allow explicit strictly-requested empty state initially
 
   return (
     <div className={styles.panelContainer}>
@@ -62,24 +69,55 @@ export function AiExplanationPanel({ apiClient, signalId }: AiExplanationPanelPr
             <div className={styles.aiBlock}>
               <h4 className={styles.aiBanner}>AI EVIDENCE SYNTHESIS</h4>
               <div className={styles.explanationText}>
-                {explanation.explanation}
+                <h5>Why this potential safety signal was flagged</h5>
+                <p>{explanation.why_flagged}</p>
+                <h5>Evidence summary</h5>
+                <p>{explanation.evidence_summary}</p>
+                {explanation.limitations.length > 0 && (
+                  <>
+                    <h5>Limitations</h5>
+                    <ul>
+                      {explanation.limitations.map((limitation) => (
+                        <li key={limitation}>{limitation}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+                {explanation.suggested_questions.length > 0 && (
+                  <>
+                    <h5>Suggested investigations</h5>
+                    <ul>
+                      {explanation.suggested_questions.map((question) => (
+                        <li key={question}>{question}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </div>
             </div>
 
             <div className={styles.reviewBlock}>
-              <h4 className={styles.reviewBanner}>HUMAN REVIEW REQUIRED</h4>
-              <p className={styles.contextText}>This generative interpretation relies on unstructured data and probability mapping. A medical expert must validate these findings.</p>
+              <h4 className={styles.reviewBanner}>
+                {explanation.human_review_required ? 'HUMAN REVIEW REQUIRED' : 'HUMAN REVIEW STATUS'}
+              </h4>
+              <p className={styles.contextText}>{explanation.disclaimer}</p>
+              {explanation.model_used && (
+                <p className={styles.contextText}>Model: {explanation.model_used}</p>
+              )}
+              {explanation.generated_at && (
+                <p className={styles.contextText}>Generated: {new Date(explanation.generated_at).toLocaleString()}</p>
+              )}
             </div>
           </div>
         ) : (
-          <div className={styles.explanationText} style={{ color: '#71717A', fontStyle: 'italic' }}>
-            No explanation generated for this sequence yet. Press "GENERATE EXPLANATION" to review evidence and limitations.
+          <div className={`${styles.explanationText} ${styles.emptyState}`}>
+            No explanation generated for this sequence yet. Press &quot;GENERATE EXPLANATION&quot; to review evidence and limitations.
           </div>
         )}
       </div>
 
       <footer className={styles.footer}>
-        <span className={styles.timestamp}>INFERENCE ID: {signalId}-GEN-{new Date().getTime().toString().slice(-6)}</span>
+        <span className={styles.timestamp}>INFERENCE ID: {inferenceId}</span>
         <button 
           className={styles.regenerateBtn} 
           onClick={fetchExplanation}

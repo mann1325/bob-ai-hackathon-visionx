@@ -2,7 +2,7 @@ import json
 from unittest.mock import MagicMock, patch
 import pytest
 
-from ai.groq_client import GroqAPIError, GroqAuthError, GroqClient
+from ai.groq_client import DEFAULT_GROQ_MODEL, GroqAPIError, GroqAuthError, GroqClient
 from app.config import get_settings
 
 
@@ -18,7 +18,7 @@ def test_prompt_uses_structured_facts_only():
         "quality_score": 0.88,
         "quality_flags": ["minor_missing_dates"],
         "duplicate_count": 1,
-        "duplicate_rationales": ["Identical drug, event, age 62M"],
+        "duplicate_rationale_sample": ["Identical drug, event, age 62M"],
         "known_limitations": ["Spontaneous reporting bias"],
     }
     prompt = client._build_user_prompt(facts)
@@ -29,6 +29,31 @@ def test_prompt_uses_structured_facts_only():
     assert "Trend Score: 0.85" in prompt
     assert "Case Quality Score: 0.88" in prompt
     assert "Potential Duplicate Candidates Count: 1" in prompt
+
+
+def test_duplicate_prompt_context_is_bounded_and_explicitly_sampled():
+    client = GroqClient(api_key="gsk_test123")
+    facts = {
+        "drug_name": "DUPIXENT",
+        "event_name": "DERMATITIS ATOPIC",
+        "duplicate_count": 3574,
+        "duplicate_rationale_sample": [
+            f"candidate rationale {index}" for index in range(3)
+        ],
+    }
+
+    prompt = client._build_user_prompt(facts)
+
+    assert "Potential Duplicate Candidates Count: 3574" in prompt
+    assert "sample only; not exhaustive" in prompt
+    assert "candidate rationale 2" in prompt
+    assert "candidate rationale 3" not in prompt
+    assert len(prompt) < 5000
+
+
+def test_default_groq_model_is_available_model():
+    assert DEFAULT_GROQ_MODEL == "openai/gpt-oss-120b"
+    assert DEFAULT_GROQ_MODEL != "llama-3.3-70b-versatile"
 
 
 def test_groq_client_json_parsing_with_code_fences():

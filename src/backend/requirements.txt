@@ -8,6 +8,7 @@ python-multipart==0.0.20
 # Database (Phase 2)
 sqlalchemy==2.0.36
 psycopg2-binary==2.9.10
+alembic==1.14.1
 
 # Text Extraction (Phase 6)
 pypdf==5.1.0

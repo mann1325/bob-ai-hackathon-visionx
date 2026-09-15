@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SignalTrace Document Analysis",
+  "schema_version": "1.0.0",
+  "type": "object",
+  "required": [
+    "document_id",
+    "signal_id",
+    "relevant_sections",
+    "analysis_status",
+    "human_review_required"
+  ],
+  "properties": {
+    "document_id": {
+      "type": "string"
+    },
+    "signal_id": {
+      "type": "string"
+    },
+    "relevant_sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "section_name",
+          "relevance_reason"
+        ],
+        "properties": {
+          "section_name": {
+            "type": "string"
+          },
+          "relevance_reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "existing_related_content": {
+      "type": "string"
+    },
+    "potential_coverage_gap": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "analysis_status": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "needs_review",
+        "failed"
+      ]
+    },
+    "human_review_required": {
+      "type": "boolean",
+      "const": true
+    }
+  },
+  "additionalProperties": false
+}

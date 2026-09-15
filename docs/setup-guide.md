@@ -24,7 +24,10 @@ IBM Bob
 
 # 2. Repository Setup
 
-The project starts from the selected Machine-Geist signal-detection repository.
+Project materials describe a selected Machine-Geist signal-detection
+repository, but its exact source and reuse are not verifiable in this
+repository. The current pipeline should be treated as SignalTrace-owned until
+that provenance is established.
 
 Initial workflow:
 
@@ -119,7 +122,8 @@ This helps reproducibility.
 
 # 5. Signal Engine Setup
 
-Use the Machine-Geist repository as the starting point.
+The original Machine-Geist source is not verifiable from this repository; do
+not claim a specific upstream source or code reuse without external evidence.
 
 Before changing signal logic:
 

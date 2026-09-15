@@ -6,7 +6,7 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile"
+DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 
@@ -71,7 +71,8 @@ class GroqClient:
             f"Case Quality Score: {facts.get('quality_score', 'N/A')}\n"
             f"Case Quality Flags: {', '.join(facts.get('quality_flags', [])) or 'None'}\n"
             f"Potential Duplicate Candidates Count: {facts.get('duplicate_count', 0)}\n"
-            f"Duplicate Rationales: {', '.join(facts.get('duplicate_rationales', [])) or 'None'}\n"
+            f"Representative Duplicate Rationales (sample only; not exhaustive): "
+            f"{', '.join(facts.get('duplicate_rationale_sample', [])) or 'None'}\n"
             f"Known Limitations: {', '.join(facts.get('known_limitations', [])) or 'Spontaneous reporting bias'}\n\n"
             "Please generate the structured explanation JSON."
         )

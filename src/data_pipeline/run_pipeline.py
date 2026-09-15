@@ -44,7 +44,7 @@ from .pair_generation import build_pair_universe
 from .preprocessing import process_demo
 from .case_processing import handle_cases
 from .quality import QualityLedger
-from .signal_detection import detect_signals
+from .signal_detection import detect_signals, deterministic_signal_id
 
 
 @dataclass
@@ -117,6 +117,14 @@ def run_pipeline(config: PipelineConfig, quiet: bool = False) -> PipelineResult:
 
     # ---- 4. statistics ------------------------------------------------------
     metrics = build_disproportionality(pairs, config)
+    metrics.insert(
+        0,
+        "signal_id",
+        metrics.apply(
+            lambda row: deterministic_signal_id(row["drug_name"], row["event_name"]),
+            axis=1,
+        ),
+    )
     _stage("disproportionality metrics_rows=%d" % len(metrics), quiet, start)
 
     # ---- 5. candidates ------------------------------------------------------

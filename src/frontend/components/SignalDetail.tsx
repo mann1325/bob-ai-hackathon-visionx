@@ -36,7 +36,7 @@ export function SignalDetail({ signal, onBack }: SignalDetailProps) {
           
           <div className={styles.spacer}></div>
           
-          <RegulatoryPanel />
+          <RegulatoryPanel apiClient={apiClient} signalId={signal.signal_id} />
         </div>
 
         {/* Right Column: AI Inference & Workflow */}

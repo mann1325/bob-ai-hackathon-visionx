@@ -5,8 +5,8 @@
 }
 
 .header {
-  padding: 3rem 4rem;
-  margin-bottom: 3rem;
+  padding: 2rem 4rem;
+  margin-bottom: 2rem;
   background: var(--navy);
   box-shadow: 0 4px 20px rgba(0, 19, 108, 0.15);
   display: flex;
@@ -39,7 +39,7 @@
 }
 
 .drugName {
-  font-size: 3rem;
+  font-size: 2rem;
   margin: 0;
   font-weight: 800;
   color: #FFFFFF;
@@ -47,11 +47,11 @@
 }
 
 .eventName {
-  color: var(--pastel-cyan);
-  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.95rem;
   margin-top: 0.25rem;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
 }
 
 .statusBadge {
@@ -91,7 +91,54 @@
 }
 
 @media (max-width: 1024px) {
+  .header {
+    padding: 1.5rem 2rem;
+    gap: 1.5rem;
+  }
+
+  .drugName {
+    font-size: 1.5rem;
+  }
+
   .gridLayout {
     grid-template-columns: 1fr;
+    padding: 0 2rem 2rem;
+    gap: 2rem;
+  }
+
+  .spacer {
+    height: 2rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding: 1rem 1.5rem;
+    gap: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .drugName {
+    font-size: 1.25rem;
+  }
+
+  .titleSection {
+    width: 100%;
+  }
+
+  .statusBadge {
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
+  }
+
+  .gridLayout {
+    padding: 0 1.5rem 1.5rem;
+    gap: 1.5rem;
+  }
+
+  .spacer {
+    height: 1.5rem;
   }
 }

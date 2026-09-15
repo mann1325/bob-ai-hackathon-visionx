@@ -19,6 +19,8 @@ from shared.schemas.ai import GroqExplanation
 
 logger = logging.getLogger(__name__)
 
+_DUPLICATE_RATIONALE_SAMPLE_SIZE = 3
+
 
 def generate_signal_explanation(
     db: Session,
@@ -54,8 +56,10 @@ def generate_signal_explanation(
             evidence.case_quality.quality_flags if evidence.case_quality else []
         ),
         "duplicate_count": len(evidence.potential_duplicates),
-        "duplicate_rationales": [
-            d.rationale for d in evidence.potential_duplicates if d.rationale
+        "duplicate_rationale_sample": [
+            d.rationale
+            for d in evidence.potential_duplicates[:_DUPLICATE_RATIONALE_SAMPLE_SIZE]
+            if d.rationale
         ],
         "known_limitations": evidence.known_limitations,
     }

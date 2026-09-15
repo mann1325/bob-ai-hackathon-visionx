@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from ml.enrich_pipeline import (
+    DEFAULT_SIGNAL_SCHEMA_PATH,
     enrich_signals,
     load_candidate_signals,
     validate_against_schema,
@@ -15,9 +16,7 @@ from ml.enrich_pipeline import (
 )
 
 
-SCHEMA_PATH = Path(__file__).resolve().parents[4] / (
-    "SignalTrace_Team_Roles_and_Schemas/shared-schemas/signal-schema.json"
-)
+SCHEMA_PATH = DEFAULT_SIGNAL_SCHEMA_PATH
 
 MINIMAL_SIGNAL = {
     "signal_id": "SIG-TEST001",
@@ -135,6 +134,10 @@ def test_load_candidate_signals_not_array_raises():
 # ---------------------------------------------------------------------------
 # Schema validation (only if jsonschema and schema file are available)
 # ---------------------------------------------------------------------------
+
+def test_default_schema_path_exists():
+    assert SCHEMA_PATH == Path(__file__).resolve().parents[2] / "data_pipeline" / "schemas" / "signal-schema.json"
+    assert SCHEMA_PATH.is_file()
 
 @pytest.mark.skipif(not SCHEMA_PATH.exists(), reason="Schema file not found")
 def test_validate_enriched_signal_passes():

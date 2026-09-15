@@ -1,0 +1,45 @@
+openapi: 3.0.3
+info:
+  title: SignalTrace API Contract
+  version: 1.0.0
+paths:
+  /signals:
+    get:
+      summary: List candidate signals
+      responses:
+        '200': {description: Candidate signal list}
+  /signals/{signal_id}:
+    get:
+      summary: Get signal details
+      parameters:
+        - name: signal_id
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        '200': {description: Signal details}
+  /signals/{signal_id}/explanation:
+    post:
+      summary: Generate AI-assisted explanation from structured evidence
+      responses:
+        '200': {description: Explanation generated}
+  /documents:
+    post:
+      summary: Upload regulatory or safety document
+      responses:
+        '201': {description: Document accepted}
+  /documents/{document_id}/analysis:
+    post:
+      summary: Analyze document against candidate signal
+      responses:
+        '200': {description: Analysis completed}
+  /live-search:
+    get:
+      summary: Optional openFDA live/search layer
+      parameters:
+        - name: drug
+          in: query
+          required: true
+          schema: {type: string}
+      responses:
+        '200': {description: Live search result}

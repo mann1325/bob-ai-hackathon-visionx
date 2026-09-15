@@ -57,6 +57,13 @@ from .trend_scorer import SINGLE_QUARTER_EXPLANATION, compute_trend_score
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_SIGNAL_SCHEMA_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "data_pipeline"
+    / "schemas"
+    / "signal-schema.json"
+)
+
 # Fields that are internal to the enrichment pipeline and NOT part of the
 # shared signal-schema.json (which uses additionalProperties: false).
 # These are retained in the enriched JSON for the DB importer but stripped
@@ -277,7 +284,7 @@ def main(argv=None) -> int:
     )
     parser.add_argument(
         "--schema",
-        default="SignalTrace_Team_Roles_and_Schemas/shared-schemas/signal-schema.json",
+        default=str(DEFAULT_SIGNAL_SCHEMA_PATH),
         help="Path to shared signal-schema.json.",
     )
     parser.add_argument(

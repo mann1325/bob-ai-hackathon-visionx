@@ -34,6 +34,18 @@ OpenAPI docs: http://localhost:8000/docs
 
 Health check: http://localhost:8000/api/v1/health
 
+## Database Migrations
+
+Production schema changes are managed with Alembic. From `src/backend`, set
+`DATABASE_URL` to the target PostgreSQL database and run:
+
+```bash
+alembic upgrade head
+```
+
+The application does not run `create_all()` on startup. The existing SQLite
+development and test workflows remain unchanged.
+
 ## Environment Variables
 
 See `src/.env.example`. Key variables:

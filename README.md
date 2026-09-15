@@ -11,7 +11,7 @@
 | **Team Name** | VisionX |
 | **Track** | AI |
 | **Team Lead** | Sharanam Katwala — 24aiml063@charusat.edu.in |
-| **Members** | Mann Shah (24dce128@charusat.edu.in), Jiya Sadaria (24aiml00@charusat.edu.in), Harshil Thakkar (24aiml00@charusat.edu.in) |
+| **Members** | Mann Shah — 24dce128@charusat.edu.in, Jiya Sadaria — 24aiml054@charusat.edu.in, Harshil Thakkar — 24aiml068@charusat.edu.in |
 
 ---
 
@@ -23,13 +23,13 @@ Pharmacovigilance teams can detect candidate drug safety signals from FDA FAERS 
 
 ## 💡 Solution
 
-SignalTrace uses official FDA FAERS quarterly data and a Machine-Geist signal-detection foundation to produce candidate drug-event signals with transparent PRR/ROR/trend metrics. From there, it builds a structured evidence package — case quality, potential duplicate triage, temporal relationship, dechallenge/rechallenge — and uses Groq to explain that evidence in plain language, strictly from backend-computed facts (AI never generates the core statistics). A deterministic rule engine then maps each signal to the regulatory documents it may affect, and Gemini analyzes uploaded documents to flag relevant sections, inconsistencies, and coverage gaps. Every output is explicitly framed as decision support requiring human review — the system never claims causality, confirms a drug is unsafe, or auto-modifies/submits regulatory documents.
+SignalTrace uses official FDA FAERS quarterly data and a deterministic SignalTrace-owned signal-detection pipeline to produce candidate drug-event signals with transparent PRR/ROR/trend metrics. Project materials describe a Machine-Geist foundation, but the exact source and code reuse are not verifiable; see the provenance audit. From there, it builds a structured evidence package — case quality, potential duplicate triage, temporal relationship, dechallenge/rechallenge — and uses Groq to explain that evidence in plain language, strictly from backend-computed facts (AI never generates the core statistics). A deterministic rule engine then maps each signal to the regulatory documents it may affect, and Gemini analyzes uploaded documents to flag relevant sections, inconsistencies, and coverage gaps. Every output is explicitly framed as decision support requiring human review — the system never claims causality, confirms a drug is unsafe, or auto-modifies/submits regulatory documents.
 
 ---
 
 ## ✨ Key Features
 
-- **Deterministic signal detection:** PRR/ROR/trend calculation on official FDA FAERS quarterly data, built on a Machine-Geist foundation
+- **Deterministic signal detection:** PRR/ROR/trend calculation on official FDA FAERS quarterly data; Machine-Geist provenance is documented as unverified
 - **Case quality analysis:** flags missing information (event date, concomitant meds, narrative) with an explainable quality score
 - **Potential duplicate triage:** both case-version deduplication and cross-case duplicate clustering — flagged for human review, never auto-deleted
 - **Groq-powered evidence explanation:** summarizes why a signal was flagged and highlights limitations, grounded entirely in backend-generated facts

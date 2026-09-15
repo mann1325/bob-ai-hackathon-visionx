@@ -4,7 +4,7 @@
 
 ## One-Line Description
 
-**SignalTrace is an AI-assisted pharmacovigilance decision-support platform built on official FDA FAERS quarterly data and a Machine-Geist signal-detection foundation to identify candidate drug safety signals, explain their evidence, and help users assess potential regulatory document impact.**
+**SignalTrace is an AI-assisted pharmacovigilance decision-support platform built on official FDA FAERS quarterly data and a deterministic SignalTrace-owned signal-detection pipeline to identify candidate drug safety signals, explain their evidence, and help users assess potential regulatory document impact. Project materials describe a Machine-Geist foundation, but its provenance is unverified.**
 
 ---
 
@@ -95,9 +95,12 @@ Benefits:
 
 ---
 
-## 2. Machine-Geist Foundation
+## 2. Machine-Geist Foundation (provenance unverified)
 
-The existing Machine-Geist repository is used as a starting foundation for the signal-detection pipeline.
+Project materials describe an existing Machine-Geist repository as a starting
+foundation, but no exact source, version, reused component, or attribution is
+verifiable in this repository. The current signal-detection pipeline is
+SignalTrace-owned.
 
 The team should:
 

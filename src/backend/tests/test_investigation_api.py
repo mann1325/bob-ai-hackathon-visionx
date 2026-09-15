@@ -1,3 +1,7 @@
+from database.models import DuplicateCandidateModel, ProcessedReportModel
+from services.investigation_service import get_duplicate_candidates_for_signal
+
+
 def test_get_case_quality_prematerialized(client):
     response = client.get("/api/v1/signals/sig-001/case-quality")
     assert response.status_code == 200
@@ -75,3 +79,92 @@ def test_duplicate_never_auto_confirmed_or_deleted(client):
         assert dup["status"] == "potential_duplicate"
         assert dup["human_review_required"] is True
         assert "prohibited" in dup["disclaimer"].lower()
+
+
+def test_duplicate_candidates_generate_from_blocked_reports(db_session):
+    db_session.add_all(
+        [
+            ProcessedReportModel(
+                report_id="real-a",
+                drug_name="WARFARIN",
+                reactions=["HAEMORRHAGE"],
+                patient_age=62,
+                patient_sex="M",
+                event_date="2026-01-15",
+                report_quarter="2024Q1",
+                source="FDA_FAERS",
+            ),
+            ProcessedReportModel(
+                report_id="real-b",
+                drug_name="WARFARIN",
+                reactions=["HAEMORRHAGE"],
+                patient_age=62,
+                patient_sex="M",
+                event_date="2026-01-15",
+                report_quarter="2024Q1",
+                source="FDA_FAERS",
+            ),
+            ProcessedReportModel(
+                report_id="different-event",
+                drug_name="WARFARIN",
+                reactions=["NAUSEA"],
+                patient_age=62,
+                patient_sex="M",
+                event_date="2026-01-15",
+                report_quarter="2024Q1",
+                source="FDA_FAERS",
+            ),
+        ]
+    )
+    db_session.flush()
+
+    candidates = get_duplicate_candidates_for_signal(db_session, "sig-002")
+
+    assert candidates is not None
+    assert len(candidates) == 1
+    candidate = candidates[0]
+    assert {candidate.report_id_a, candidate.report_id_b} == {"real-a", "real-b"}
+    assert candidate.status == "potential_duplicate"
+    assert candidate.similarity_score == 1.0
+    assert candidate.date_proximity_days == 0
+    assert candidate.matched_fields == ["drug", "event", "age", "sex", "event_date"]
+    assert candidate.human_review_required is True
+    assert "not confirmation" in candidate.rationale
+
+
+def test_duplicate_generation_is_idempotent_and_excludes_self_pairs(db_session):
+    db_session.add_all(
+        [
+            ProcessedReportModel(
+                report_id="stable-a",
+                drug_name="WARFARIN",
+                reactions=["HAEMORRHAGE"],
+                patient_age=60,
+                patient_sex="F",
+                event_date="2026-02-01",
+                report_quarter="2024Q1",
+                source="FDA_FAERS",
+            ),
+            ProcessedReportModel(
+                report_id="stable-b",
+                drug_name="WARFARIN",
+                reactions=["HAEMORRHAGE"],
+                patient_age=60,
+                patient_sex="F",
+                event_date="2026-02-01",
+                report_quarter="2024Q1",
+                source="FDA_FAERS",
+            ),
+        ]
+    )
+    db_session.flush()
+
+    first = get_duplicate_candidates_for_signal(db_session, "sig-002")
+    first_ids = {candidate.candidate_id for candidate in first or []}
+    first_row_count = db_session.query(DuplicateCandidateModel).count()
+    second = get_duplicate_candidates_for_signal(db_session, "sig-002")
+    second_ids = {candidate.candidate_id for candidate in second or []}
+
+    assert first_ids == second_ids
+    assert first_row_count == db_session.query(DuplicateCandidateModel).count()
+    assert all(candidate.report_id_a != candidate.report_id_b for candidate in second or [])

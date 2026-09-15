@@ -33,11 +33,17 @@
 }
 
 .tableWrapper {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-gutter: stable;
 }
 
 .signalTable {
   width: 100%;
+  min-width: 980px;
   border-collapse: collapse;
   text-align: left;
 }
@@ -164,4 +170,16 @@
   border-radius: var(--border-radius-card);
   margin: 1rem;
   border: 1px dashed #CBD5E1;
+}
+
+@media (max-width: 1200px) {
+  .signalTable {
+    min-width: 900px;
+  }
+
+  .signalTable th,
+  .signalTable td {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }

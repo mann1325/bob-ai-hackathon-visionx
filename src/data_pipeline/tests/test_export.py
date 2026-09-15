@@ -90,6 +90,21 @@ def test_full_pipeline_end_to_end(test_config):
     assert result.reconciliation["stages"]["candidates"] == result.reconciliation["signals"]
     assert result.manifest["outcome"] == "completed"
 
+    candidate_records = json.loads((out / "candidate_signals.json").read_text(encoding="utf-8"))
+    metrics = pd.read_csv(out / "signal_metrics.csv")
+    assert "signal_id" in metrics.columns
+
+    candidate_pairs = {
+        (record["drug_name"], record["event_name"]): record["signal_id"]
+        for record in candidate_records
+    }
+    metric_pairs = {
+        (row.drug_name, row.event_name): row.signal_id
+        for row in metrics.itertuples(index=False)
+        if (row.drug_name, row.event_name) in candidate_pairs
+    }
+    assert metric_pairs == candidate_pairs
+
 
 def test_determinism_two_runs_identical(test_config):
     """Two identical runs must produce byte-identical data artifacts."""

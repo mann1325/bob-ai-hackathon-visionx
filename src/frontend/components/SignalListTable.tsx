@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { ApiClient } from '../lib/api/client';
-import { Signal } from '../lib/api/types';
+import { Signal, SignalListResponse } from '../lib/api/types';
 import styles from './SignalListTable.module.css';
 
 interface SignalListTableProps {
@@ -11,7 +11,13 @@ interface SignalListTableProps {
 }
 
 export function SignalListTable({ apiClient, onSelectSignal }: SignalListTableProps) {
-  const [signals, setSignals] = useState<Signal[]>([]);
+  const [signalResponse, setSignalResponse] = useState<SignalListResponse>({
+    items: [],
+    total: 0,
+    page: 1,
+    page_size: 20,
+    pages: 1,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,16 +33,24 @@ export function SignalListTable({ apiClient, onSelectSignal }: SignalListTablePr
   };
 
   useEffect(() => {
-    setIsLoading(true);
-    setError(null);
-    apiClient.listSignals()
-      .then(setSignals)
-      .catch((err: any) => setError(err.message || 'Failed to load signals.'))
-      .finally(() => setIsLoading(false));
+    const loadSignals = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const loadedResponse = await apiClient.listSignals();
+        setSignalResponse(loadedResponse);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Failed to load signals.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadSignals();
   }, [apiClient]);
 
   const sortedAndFilteredSignals = useMemo(() => {
-    let result = signals;
+    let result = signalResponse.items;
     if (searchTerm.trim()) {
       const lower = searchTerm.toLowerCase();
       result = result.filter(
@@ -64,7 +78,7 @@ export function SignalListTable({ apiClient, onSelectSignal }: SignalListTablePr
     }
     
     return result;
-  }, [signals, searchTerm, sortConfig]);
+  }, [signalResponse.items, searchTerm, sortConfig]);
 
   return (
     <div className={styles.tableContainer}>

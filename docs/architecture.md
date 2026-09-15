@@ -104,9 +104,11 @@ The system should support reproducible analysis against a defined dataset releas
 
 ---
 
-## Machine-Geist Foundation
+## Machine-Geist Foundation (provenance unverified)
 
-Machine-Geist is used as the starting repository/foundation for the signal-detection pipeline.
+Project materials describe Machine-Geist as the starting repository/foundation,
+but the exact repository, version, reused components, and attribution could not
+be verified. The current signal-detection implementation is SignalTrace-owned.
 
 Before modifications:
 

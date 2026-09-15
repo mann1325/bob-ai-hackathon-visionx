@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.config import get_settings
+from app.config import get_settings, normalize_database_url
 
 logger = logging.getLogger(__name__)
 
@@ -20,13 +20,13 @@ def get_engine() -> Optional[Engine]:
         return _engine
 
     settings = get_settings()
-    if not settings.database_url:
+    db_url = normalize_database_url(settings.database_url)
+    if not db_url:
         logger.warning(
             "DATABASE_URL not configured. Database-dependent endpoints will return 503."
         )
         return None
 
-    db_url = settings.database_url
     connect_args = {}
     if db_url.startswith("sqlite"):
         connect_args["check_same_thread"] = False
@@ -65,7 +65,7 @@ def get_session_factory() -> Optional[sessionmaker]:
 
 def get_db() -> Generator[Session, None, None]:
     """FastAPI dependency yielding a database session."""
-    factory = get_session_factory()
+    factory = _session_factory
     if factory is None:
         raise HTTPException(
             status_code=503,

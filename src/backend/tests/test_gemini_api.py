@@ -58,6 +58,11 @@ def test_gemini_prompt_building():
     assert "Gastrointestinal ulceration" in prompt
 
 
+def test_default_gemini_model_is_available_model():
+    assert DEFAULT_GEMINI_MODEL == "gemini-3.5-flash-lite"
+    assert DEFAULT_GEMINI_MODEL != "gemini-1.5-flash"
+
+
 def test_gemini_json_parsing_with_code_fences():
     """Verify JSON parsing handles markdown fences and normalizes fields."""
     client = GeminiClient(api_key="test-key")

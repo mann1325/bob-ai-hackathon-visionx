@@ -1,4 +1,6 @@
-from typing import List, Optional
+import hashlib
+from itertools import combinations
+from typing import Dict, List, Optional, Tuple
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -13,6 +15,99 @@ from shared.schemas.evidence import (
     CaseQualityReport,
     DuplicateCandidate,
 )
+
+
+def _duplicate_candidate_from_model(candidate: DuplicateCandidateModel) -> DuplicateCandidate:
+    return DuplicateCandidate(
+        candidate_id=candidate.candidate_id,
+        report_id_a=candidate.report_id_a,
+        report_id_b=candidate.report_id_b,
+        rationale=candidate.rationale,
+        status=candidate.status,
+        similarity_score=candidate.similarity_score,
+        drug_similarity=candidate.drug_similarity,
+        event_similarity=candidate.event_similarity,
+        date_proximity_days=candidate.date_proximity_days,
+        matched_fields=candidate.matched_fields or [],
+    )
+
+
+def _report_block_key(report: ProcessedReportModel) -> Optional[Tuple[float, str, str]]:
+    """Return a strict duplicate block key from complete identifying fields."""
+    if report.patient_age is None or not report.patient_sex or not report.event_date:
+        return None
+    return (
+        float(report.patient_age),
+        report.patient_sex.strip().upper(),
+        report.event_date.strip(),
+    )
+
+
+def _build_potential_duplicate(
+    signal: SignalModel,
+    report_a: ProcessedReportModel,
+    report_b: ProcessedReportModel,
+    block_key: Tuple[float, str, str],
+) -> DuplicateCandidateModel:
+    report_ids = sorted((report_a.report_id, report_b.report_id))
+    candidate_key = "|".join((signal.signal_id, *report_ids))
+    candidate_id = f"DUP-{hashlib.sha256(candidate_key.encode('utf-8')).hexdigest()[:12].upper()}"
+    age, sex, event_date = block_key
+    rationale = (
+        f"Potential duplicate review: reports {report_ids[0]} and {report_ids[1]} "
+        f"share drug '{signal.drug_name}', event '{signal.event_name}', "
+        f"patient age {age:g}, sex '{sex}', and event date {event_date}. "
+        "Exact field overlap is a triage signal only and is not confirmation of duplication."
+    )
+    return DuplicateCandidateModel(
+        candidate_id=candidate_id,
+        signal_id=signal.signal_id,
+        report_id_a=report_ids[0],
+        report_id_b=report_ids[1],
+        rationale=rationale,
+        similarity_score=1.0,
+        drug_similarity=1.0,
+        event_similarity=1.0,
+        date_proximity_days=0,
+        matched_fields=["drug", "event", "age", "sex", "event_date"],
+        status="potential_duplicate",
+    )
+
+
+def _generate_duplicate_candidates(
+    db: Session,
+    signal: SignalModel,
+) -> List[DuplicateCandidateModel]:
+    """Generate candidates using strict indexed drug/quarter and field blocks."""
+    report_query = (
+        select(ProcessedReportModel)
+        .where(func.upper(ProcessedReportModel.drug_name) == signal.drug_name.upper())
+        .order_by(ProcessedReportModel.report_id)
+    )
+    if signal.dataset_version:
+        report_query = report_query.where(
+            ProcessedReportModel.report_quarter == signal.dataset_version
+        )
+
+    blocks: Dict[Tuple[float, str, str], List[ProcessedReportModel]] = {}
+    for report in db.scalars(report_query).all():
+        reactions = report.reactions if isinstance(report.reactions, list) else []
+        if signal.event_name not in reactions:
+            continue
+        block_key = _report_block_key(report)
+        if block_key is not None:
+            blocks.setdefault(block_key, []).append(report)
+
+    candidates: List[DuplicateCandidateModel] = []
+    for block_key in sorted(blocks, key=lambda key: tuple(str(value) for value in key)):
+        reports = blocks[block_key]
+        for report_a, report_b in combinations(reports, 2):
+            if report_a.report_id == report_b.report_id:
+                continue
+            candidates.append(
+                _build_potential_duplicate(signal, report_a, report_b, block_key)
+            )
+    return candidates
 
 
 def get_case_quality_for_signal(
@@ -137,7 +232,7 @@ def get_case_quality_for_signal(
 def get_duplicate_candidates_for_signal(
     db: Session, signal_id: str
 ) -> Optional[List[DuplicateCandidate]]:
-    """Retrieve potential duplicate report candidates for a signal."""
+    """Retrieve or materialize potential duplicate candidates for a signal."""
     sig_stmt = select(SignalModel).where(SignalModel.signal_id == signal_id)
     sig = db.scalars(sig_stmt).first()
     if not sig:
@@ -147,23 +242,14 @@ def get_duplicate_candidates_for_signal(
     dup_stmt = select(DuplicateCandidateModel).where(
         DuplicateCandidateModel.signal_id == signal_id
     )
-    dups = db.scalars(dup_stmt).all()
+    dups = db.scalars(dup_stmt.order_by(DuplicateCandidateModel.candidate_id)).all()
     if dups:
-        return [
-            DuplicateCandidate(
-                candidate_id=d.candidate_id,
-                report_id_a=d.report_id_a,
-                report_id_b=d.report_id_b,
-                rationale=d.rationale,
-                status=d.status,
-                similarity_score=d.similarity_score,
-                drug_similarity=d.drug_similarity,
-                event_similarity=d.event_similarity,
-                date_proximity_days=d.date_proximity_days,
-                matched_fields=d.matched_fields or [],
-            )
-            for d in dups
-        ]
+        return [_duplicate_candidate_from_model(candidate) for candidate in dups]
 
-    # If not pre-materialized, return empty candidate list (never invent fake matches)
-    return []
+    generated = _generate_duplicate_candidates(db, sig)
+    if not generated:
+        return []
+
+    db.add_all(generated)
+    db.commit()
+    return [_duplicate_candidate_from_model(candidate) for candidate in generated]

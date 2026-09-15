@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { ApiClient } from '../lib/api/client';
-import { DocumentAnalysis } from '../lib/api/types';
+import { DocumentAnalysis, DocumentUpload } from '../lib/api/types';
 import styles from './DocumentWorkflow.module.css';
 
 interface DocumentWorkflowProps {
@@ -11,7 +11,6 @@ interface DocumentWorkflowProps {
 }
 
 export function DocumentWorkflow({ apiClient, signalId }: DocumentWorkflowProps) {
-  const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +19,6 @@ export function DocumentWorkflow({ apiClient, signalId }: DocumentWorkflowProps)
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-    setFile(selectedFile);
     setIsUploading(true);
     setError(null);
     setAnalysis(null);
@@ -28,13 +26,20 @@ export function DocumentWorkflow({ apiClient, signalId }: DocumentWorkflowProps)
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
+      formData.append('signal_id', signalId);
       
-      const { document_id } = await apiClient.uploadDocument(formData);
-      const docAnalysis = await apiClient.analyzeDocument(document_id, signalId);
+      const uploadedDocument = await apiClient.uploadDocument(formData) as DocumentUpload;
+      const executionAnalysis = await apiClient.analyzeDocument(uploadedDocument.document_id, signalId);
+      const documentClient = apiClient as ApiClient & {
+        getDocumentAnalysis?: (documentId: string) => Promise<DocumentAnalysis>;
+      };
+      const docAnalysis = documentClient.getDocumentAnalysis
+        ? await documentClient.getDocumentAnalysis(uploadedDocument.document_id)
+        : executionAnalysis;
       
       setAnalysis(docAnalysis);
-    } catch (err: any) {
-      setError(err.message || 'Pipeline indexing failed.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Pipeline indexing failed.');
     } finally {
       setIsUploading(false);
     }
@@ -50,9 +55,9 @@ export function DocumentWorkflow({ apiClient, signalId }: DocumentWorkflowProps)
         <label className={styles.uploadZone}>
           <h3 className={styles.uploadTitle}>Click or drag document to begin Gemini analysis</h3>
           <p className={styles.uploadSpecs}>
-            Supported: PDF, XML (ICH E2B R3), DOCX, eCTD Module 2/5 (Max 128MB) • Checksum sha256 computed on drop
+            Supported: PDF, DOCX, TXT (Max 10MB)
           </p>
-          <input type="file" onChange={handleFileChange} className={styles.hiddenInput} />
+          <input type="file" accept=".pdf,.docx,.txt" onChange={handleFileChange} className={styles.hiddenInput} />
         </label>
       )}
 
@@ -66,7 +71,7 @@ export function DocumentWorkflow({ apiClient, signalId }: DocumentWorkflowProps)
       {error && (
         <div className={styles.demoErrorState}>
           <span>Unable to complete analysis</span>
-          <button className={styles.retryLinkBtn} onClick={() => {setError(null); setFile(null);}}>Try again</button>
+          <button className={styles.retryLinkBtn} onClick={() => setError(null)}>Try again</button>
         </div>
       )}
 
@@ -97,9 +102,19 @@ export function DocumentWorkflow({ apiClient, signalId }: DocumentWorkflowProps)
              </div>
           )}
 
+          <div className={styles.relatedContent}>
+            <h4>Analysis Status</h4>
+            <p>{analysis.analysis_status}</p>
+            <p>Signal: {analysis.signal_id}</p>
+            <p>{analysis.human_review_required ? 'Human review required.' : 'Human review not required.'}</p>
+            <p>{analysis.disclaimer}</p>
+          </div>
+
           <div className={styles.actionFooter}>
              <span className={styles.auditStamp}>21 CFR PART 11 COMPLIANT AUDIT IMMUTABLE • TIMESTAMP: {new Date().toISOString()}</span>
-             <button className={styles.commitBtn}>Affirm & Append to Regulatory Dossier</button>
+             <button className={styles.commitBtn} type="button" disabled title="Pending human review">
+              Affirm & Append to Regulatory Dossier — Pending Review
+             </button>
           </div>
         </div>
       )}

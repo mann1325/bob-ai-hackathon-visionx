@@ -4,6 +4,14 @@ from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def normalize_database_url(database_url: Optional[str]) -> Optional[str]:
+    if not database_url:
+        return None
+    if database_url.startswith("postgres://"):
+        return "postgresql+psycopg2://" + database_url[len("postgres://") :]
+    return database_url
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -36,6 +44,11 @@ class Settings(BaseSettings):
     @property
     def is_development(self) -> bool:
         return self.app_env.lower() == "development"
+
+    @property
+    def sqlalchemy_database_url(self) -> Optional[str]:
+        """Return a SQLAlchemy-compatible URL for local and Render databases."""
+        return normalize_database_url(self.database_url)
 
 
 @lru_cache

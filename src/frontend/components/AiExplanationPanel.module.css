@@ -1,115 +1,141 @@
 .panelContainer {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   background: #FFFFFF;
+  border: 1px solid rgba(0, 19, 108, 0.06);
   border-radius: var(--border-radius-card);
   box-shadow: var(--shadow-diffuse);
-  overflow: auto;
-  resize: both;
   color: var(--foreground);
-  min-width: 300px;
-  min-height: 200px;
+  overflow: hidden;
 }
 
 .noticeBanner {
-  background: var(--pastel-magenta);
-  color: var(--navy-dark);
-  padding: 1.5rem;
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.125rem;
-  font-weight: 800;
-  text-transform: uppercase;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 1.5rem;
+  background: var(--pastel-yellow);
+  color: var(--navy-dark);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.4;
 }
 
 .badge {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.7rem;
   background: var(--navy-dark);
-  color: var(--pastel-magenta);
-  padding: 0.25rem 0.75rem;
+  color: var(--pastel-yellow);
   border-radius: var(--border-radius-pill);
   font-size: 0.75rem;
   letter-spacing: 0.05em;
+  line-height: 1.3;
 }
 
 .contentArea {
-  padding: 2.5rem;
+  min-width: 0;
+  padding: 2rem;
 }
 
 .heading {
-  margin: 0 0 1.5rem 0;
-  font-size: 1.5rem;
+  margin: 0 0 1.5rem;
   color: var(--navy);
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.25rem;
   font-weight: 800;
+  line-height: 1.25;
 }
 
 .explanationText {
-  font-size: 1rem;
-  line-height: 1.8;
+  min-width: 0;
   color: var(--text-muted);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.7;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.emptyState {
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 .synthesisContainer {
   display: flex;
+  min-width: 0;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .evidenceBlock {
+  padding: 1rem 1.25rem;
   border-left: 4px solid var(--royal-blue);
-  padding-left: 1rem;
+  border-radius: 0 var(--border-radius-card) var(--border-radius-card) 0;
+  background: var(--background-alt);
 }
 
 .computedBanner {
-  font-size: 0.875rem;
-  font-weight: 800;
+  margin: 0 0 0.5rem;
   color: var(--royal-blue);
-  margin: 0 0 0.5rem 0;
-  text-transform: uppercase;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 800;
   letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .contextText {
+  margin: 0;
+  color: var(--text-muted);
   font-family: 'Inter', sans-serif;
   font-size: 0.875rem;
-  color: var(--text-muted);
-  margin: 0;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .aiBlock {
-  background: var(--background-alt);
-  padding: 1.5rem;
-  border-radius: var(--border-radius-card);
+  min-width: 0;
   border: 1px solid rgba(0, 19, 108, 0.05);
+  border-radius: var(--border-radius-card);
+  background: #FFFFFF;
+  box-shadow: var(--shadow-diffuse);
+  padding: 1.5rem;
 }
 
 .aiBanner {
-  font-size: 0.875rem;
-  font-weight: 800;
-  color: var(--navy);
-  margin: 0 0 1rem 0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  margin: 0 0 1rem;
+  color: var(--navy);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .reviewBlock {
-  background: #FEF3C7;
-  padding: 1rem 1.5rem;
-  border-radius: var(--border-radius-card);
+  padding: 1rem 1.25rem;
   border-left: 4px solid #D97706;
+  border-radius: 0 var(--border-radius-card) var(--border-radius-card) 0;
+  background: #FEF3C7;
 }
 
 .reviewBanner {
+  margin: 0 0 0.5rem;
+  color: #92400E;
+  font-family: 'Outfit', sans-serif;
   font-size: 0.875rem;
   font-weight: 800;
-  color: #92400E;
-  margin: 0 0 0.5rem 0;
-  text-transform: uppercase;
   letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .loadingSkeleton {
@@ -143,30 +169,37 @@
 }
 
 .footer {
-  padding: 1.5rem 2.5rem;
-  background: var(--background-alt);
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 2rem;
+  border-top: 1px solid rgba(0, 19, 108, 0.06);
+  background: var(--background-alt);
 }
 
 .timestamp {
+  min-width: 0;
+  color: var(--text-muted);
   font-family: 'Inter', sans-serif;
   font-size: 0.75rem;
-  color: var(--text-muted);
-  font-weight: 600;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .regenerateBtn {
+  flex: 0 0 auto;
+  border: none;
+  border-radius: var(--border-radius-pill);
   background: var(--royal-blue);
   color: #FFFFFF;
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--border-radius-pill);
-  font-size: 0.875rem;
+  padding: 0.7rem 1.25rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .regenerateBtn:hover:not(:disabled) {
@@ -195,15 +228,16 @@
 }
 
 .demoLoadingState {
+  min-height: 12rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
+  padding: 2rem;
   color: var(--navy);
   font-family: 'Outfit', sans-serif;
-  font-size: 1.25rem;
-  font-weight: 500;
+  font-size: 1.1rem;
+  font-weight: 600;
   gap: 1rem;
 }
 
@@ -218,16 +252,17 @@
 }
 
 .demoSuccessState {
-  color: #059669;
-  font-weight: 700;
-  font-family: 'Outfit', sans-serif;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1.25rem;
+  color: #047857;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
 .demoErrorState {
+  min-height: 12rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -236,16 +271,74 @@
   color: #DC2626;
   font-family: 'Outfit', sans-serif;
   font-weight: 600;
-  font-size: 1.25rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
   gap: 1rem;
 }
 
 .retryLinkBtn {
-  background: none;
   border: none;
+  background: none;
   color: var(--royal-blue);
+  font-size: 1rem;
+  font-weight: 700;
   text-decoration: underline;
   cursor: pointer;
-  font-weight: 600;
-  font-size: 1rem;
+}
+
+.explanationText h5 {
+  margin: 1.25rem 0 0.5rem;
+  color: var(--navy);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.explanationText h5:first-child {
+  margin-top: 0;
+}
+
+.explanationText p {
+  margin: 0 0 0.75rem;
+}
+
+.explanationText ul {
+  margin: 0 0 0.75rem;
+  padding-left: 1.25rem;
+}
+
+.explanationText li {
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 600px) {
+  .noticeBanner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 1rem;
+    font-size: 0.8rem;
+  }
+
+  .contentArea {
+    padding: 1.25rem;
+  }
+
+  .heading {
+    font-size: 1.1rem;
+  }
+
+  .aiBlock {
+    padding: 1.25rem;
+  }
+
+  .footer {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 1rem 1.25rem;
+  }
+
+  .regenerateBtn {
+    width: 100%;
+  }
 }

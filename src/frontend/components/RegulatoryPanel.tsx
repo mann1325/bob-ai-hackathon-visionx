@@ -1,64 +1,41 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import defaultApiClient from '../lib/api';
+import { ApiClient } from '../lib/api/client';
+import { RegulatoryImpact, ReviewArea } from '../lib/api/types';
 import styles from './RegulatoryPanel.module.css';
 
-interface MappedArea {
-  id: string;
-  title: string;
-  target: string;
-  description: string;
-  status: 'unlisted' | 'compliant' | 'pending';
-  tags: { label: string; isHighlight?: boolean }[];
+interface RegulatoryPanelProps {
+  apiClient?: ApiClient;
+  signalId?: string;
 }
 
-const REVIEW_AREAS: MappedArea[] = [
-  {
-    id: 'M1',
-    title: 'Module 1: Administrative Information',
-    target: 'Score: 100%',
-    description: 'Regional administrative data and prescribing information format strictly conforms to local authority requirements.',
-    status: 'compliant',
-    tags: [
-      { label: 'Validated' }
-    ]
-  },
-  {
-    id: 'M2',
-    title: 'Module 2: CTD Summaries',
-    target: 'Score: 82% (GAP DETECTED)',
-    description: 'Clinical Overview (Section 2.5) is missing an integrated safety narrative for newly flagged hepatotoxicity occurrences.',
-    status: 'unlisted',
-    tags: [
-      { label: 'GAP REPORT: Missing Section 2.5', isHighlight: true },
-      { label: 'Requires AI Synthesis' }
-    ]
-  },
-  {
-    id: 'M3',
-    title: 'Module 3: Quality',
-    target: 'Score: 95%',
-    description: 'Chemical, pharmaceutical, and biological documentation check complete. Minor formatting issues pending.',
-    status: 'pending',
-    tags: [
-      { label: 'DUE: Q3 2026' }
-    ]
-  },
-  {
-    id: 'M4 / M5',
-    title: 'Modules 4 & 5: Study Reports',
-    target: 'Score: 65% (CRITICAL GAPS)',
-    description: 'Efficacy reports complete, but Section 5.3.5 (Reports of Efficacy and Safety Studies) is missing post-market surveillance statistics and calculated PRR models.',
-    status: 'unlisted',
-    tags: [
-      { label: 'GAP REPORT: Clinical Safety Docs', isHighlight: true },
-      { label: '15-DAY SUBMISSION THRESHOLD', isHighlight: true }
-    ]
-  }
-];
+function reviewAreaKey(area: ReviewArea, index: number): string {
+  return `${area.document_type}-${index}`;
+}
 
-export function RegulatoryPanel() {
+export function RegulatoryPanel({ apiClient = defaultApiClient, signalId = 'SIG-1001' }: RegulatoryPanelProps) {
+  const [impact, setImpact] = useState<RegulatoryImpact | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadImpact = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        setImpact(await apiClient.getRegulatoryImpact(signalId));
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Failed to load regulatory impact.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadImpact();
+  }, [apiClient, signalId]);
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
@@ -67,55 +44,89 @@ export function RegulatoryPanel() {
   return (
     <div className={styles.panelContainer}>
       <header className={styles.banner}>
-        <span>SUBMISSION READINESS</span>
-        <span className={styles.engineTag}>ICH M4 CTD DOSSIER & GAP ENFORCER</span>
+        <span>REGULATORY REVIEW IMPACT</span>
+        <span className={styles.engineTag}>DETERMINISTIC RULE ENGINE</span>
       </header>
 
-      <div className={styles.sectionGrid}>
-        {REVIEW_AREAS.map(area => {
-          const isExpanded = expandedId === area.id;
-          return (
-            <div 
-              key={area.id} 
-              className={`${styles.itemRow} ${isExpanded ? styles.expanded : ''}`}
-              onClick={() => toggleExpand(area.id)}
-            >
-              <div className={styles.itemStatus}>
-                {area.status === 'unlisted' && <div className={styles.iconUnlisted} title="Unlisted / Deficient" />}
-                {area.status === 'compliant' && <div className={styles.iconCompliant} title="Compliant" />}
-                {area.status === 'pending' && <div className={styles.iconPending} title="Pending Update" />}
-              </div>
-              
-              <div className={styles.itemContent}>
-                <div className={styles.itemHeader}>
-                  <h3 className={styles.itemTitle}>{area.id}. {area.title}</h3>
-                  <div className={styles.headerRight}>
-                    <span className={styles.itemTarget}>{area.target}</span>
-                    <span className={styles.chevron}>{isExpanded ? '▼' : '►'}</span>
-                  </div>
-                </div>
-                
-                {isExpanded && (
-                  <div className={styles.itemDetails}>
-                    <p className={styles.itemDescription}>{area.description}</p>
-                    
-                    <div className={styles.tagGroup}>
-                      {area.tags.map((tag, idx) => (
-                        <span 
-                          key={idx} 
-                          className={`${styles.tag} ${tag.isHighlight ? styles.highlight : ''}`}
-                        >
-                          {tag.label}
-                        </span>
-                      ))}
+      {isLoading && <div className={styles.itemDetails}>Evaluating signal-specific rules...</div>}
+      {error && <div className={styles.itemDetails}>{error}</div>}
+
+      {!isLoading && !error && impact && (
+        <>
+          <section className={styles.reviewSection}>
+            <h2 className={styles.sectionHeading}>Potential Review Areas</h2>
+            <div className={styles.sectionGrid}>
+              {impact.review_areas.length === 0 ? (
+                <div className={styles.emptyState}>No potential review areas matched.</div>
+              ) : (
+                impact.review_areas.map((area, index) => {
+                  const id = reviewAreaKey(area, index);
+                  const isExpanded = expandedId === id;
+                  return (
+                    <div
+                      key={id}
+                      className={`${styles.itemRow} ${styles.reviewRow} ${isExpanded ? styles.expanded : ''}`}
+                      onClick={() => toggleExpand(id)}
+                    >
+                      <div className={styles.itemStatus}>
+                        <div className={styles.iconPending} title="Potential review area" />
+                      </div>
+                      <div className={styles.itemContent}>
+                        <div className={styles.itemHeader}>
+                          <h3 className={styles.itemTitle}>{area.document_type}</h3>
+                          <div className={styles.headerRight}>
+                            <span className={styles.itemTarget}>{area.priority || 'medium'} priority</span>
+                            <span className={styles.chevron}>{isExpanded ? '▼' : '►'}</span>
+                          </div>
+                        </div>
+                        {isExpanded && (
+                          <div className={styles.itemDetails}>
+                            {area.section_hint && <p className={styles.itemDescription}>{area.section_hint}</p>}
+                            {area.rationale && <p className={styles.itemDescription}>{area.rationale}</p>}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </section>
+
+          <section className={styles.ruleSection}>
+            <h2 className={styles.sectionHeading}>Deterministic Rule Matches</h2>
+            <div className={styles.sectionGrid}>
+              {impact.rule_matches.length === 0 ? (
+                <div className={styles.emptyState}>No deterministic rule matches.</div>
+              ) : (
+                impact.rule_matches.map((match) => (
+                  <div key={match.rule_id} className={`${styles.itemRow} ${styles.ruleRow}`}>
+                    <div className={styles.itemStatus}>
+                      <div className={styles.iconPending} title="Deterministic rule match" />
+                    </div>
+                    <div className={styles.itemContent}>
+                      <div className={styles.itemHeader}>
+                        <h3 className={styles.itemTitle}>{match.rule_id}: {match.rule_name}</h3>
+                      </div>
+                      <div className={styles.itemDetails}>
+                        <p className={styles.itemDescription}>{match.condition_matched}</p>
+                        {match.confidence_rationale && <p className={styles.itemDescription}>{match.confidence_rationale}</p>}
+                      </div>
                     </div>
                   </div>
-                )}
-              </div>
+                ))
+              )}
             </div>
-          );
-        })}
-      </div>
+          </section>
+
+          <div className={styles.reviewNotice}>
+            <p className={styles.itemDescription}>
+              {impact.human_review_required ? 'Human review required.' : 'Human review not required.'}
+            </p>
+            <p className={styles.disclaimer}>{impact.disclaimer}</p>
+          </div>
+        </>
+      )}
     </div>
   );
 }

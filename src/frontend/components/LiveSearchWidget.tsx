@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { ApiClient } from '../lib/api/client';
+import { LiveSearchResponse } from '../lib/api/types';
 import styles from './LiveSearchWidget.module.css';
 
 interface LiveSearchWidgetProps {
@@ -10,7 +11,7 @@ interface LiveSearchWidgetProps {
 
 export function LiveSearchWidget({ apiClient }: LiveSearchWidgetProps) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<LiveSearchResponse | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isDegraded, setIsDegraded] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -29,7 +30,7 @@ export function LiveSearchWidget({ apiClient }: LiveSearchWidgetProps) {
     try {
       const data = await apiClient.liveSearch(query);
       setResults(data);
-    } catch (err) {
+    } catch {
       setIsDegraded(true);
     } finally {
       setIsSearching(false);
@@ -90,9 +91,9 @@ export function LiveSearchWidget({ apiClient }: LiveSearchWidgetProps) {
           {!isDegraded && !isSearching && results && (
             <div className={styles.resultsArea}>
               <div className={styles.demoSuccessState}>✓ Search complete</div>
-              Found <strong>{results.meta?.results?.total || 0}</strong> external reports.
+              Found <strong>{results.total}</strong> external drug label results for <strong>{results.query}</strong>.
               <br />
-               (Note: External openFDA queries are non-binding outside active Audit Trail context.)
+              <small>{results.disclaimer}</small>
             </div>
           )}
         </div>

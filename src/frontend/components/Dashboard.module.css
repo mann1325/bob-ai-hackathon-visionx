@@ -10,11 +10,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 2rem;
   /* Flyby organic bottom curve style approximation */
   border-bottom: 8px solid var(--royal-blue);
   box-shadow: 0 4px 20px rgba(0, 19, 108, 0.15);
   position: relative;
   z-index: 10;
+  min-width: 0;
 }
 
 .brand {
@@ -23,10 +25,14 @@
   font-weight: 800;
   color: #FFFFFF;
   letter-spacing: -0.04em;
+  flex-shrink: 0;
 }
 
 .widgetWrapper {
-  width: 500px;
+  flex: 1;
+  max-width: 500px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .mainContent {
@@ -43,4 +49,37 @@
   box-shadow: var(--shadow-diffuse);
   overflow: hidden;
   border: 1px solid rgba(0, 19, 108, 0.04);
+}
+
+@media (max-width: 1024px) {
+  .header {
+    padding: 1.5rem 2rem;
+    gap: 1.5rem;
+  }
+
+  .brand {
+    font-size: 1.5rem;
+  }
+
+  .widgetWrapper {
+    max-width: 350px;
+  }
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding: 1rem 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .brand {
+    font-size: 1.25rem;
+    flex-basis: 100%;
+  }
+
+  .widgetWrapper {
+    flex-basis: 100%;
+    max-width: 100%;
+  }
 }

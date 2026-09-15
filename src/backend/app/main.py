@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.errors import register_exception_handlers
 from api.v1.router import api_v1_router
 from app.config import get_settings
+from database.session import get_session_factory
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    get_session_factory()
     app = FastAPI(
         title=settings.app_name,
         version="0.1.0",

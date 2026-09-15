@@ -143,7 +143,7 @@
   align-items: center;
   justify-content: center;
   padding: 3rem;
-  color: var(--navy);
+  color: #FFFFFF;
   font-family: 'Outfit', sans-serif;
   font-size: 1.25rem;
   font-weight: 500;
@@ -188,4 +188,84 @@
   cursor: pointer;
   font-weight: 600;
   font-size: 1rem;
+}
+
+.widgetContainer {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.content {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  color: #FFFFFF;
+}
+
+.collapsedState {
+  color: #FFFFFF;
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.resultsArea {
+  color: #FFFFFF;
+  line-height: 1.5;
+}
+
+.resultsArea small {
+  color: rgba(255, 255, 255, 0.8);
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 1024px) {
+  .header {
+    margin-bottom: 0.75rem;
+  }
+
+  .trackerPill {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.65rem;
+  }
+
+  .searchBtn {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.8rem;
+  }
+
+  .inputWrapper {
+    padding: 0.3rem 0.3rem 0.3rem 0.9rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .header {
+    margin-bottom: 0.65rem;
+  }
+
+  .trackerPill {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.6rem;
+  }
+
+  .searchInput {
+    font-size: 0.8rem;
+    padding: 0.6rem 0.4rem;
+  }
+
+  .searchBtn {
+    padding: 0.6rem 1rem;
+    font-size: 0.75rem;
+  }
+
+  .inputWrapper {
+    padding: 0.3rem 0.3rem 0.3rem 0.8rem;
+    gap: 0.35rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  }
 }
