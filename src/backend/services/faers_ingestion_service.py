@@ -5,6 +5,7 @@ Parses the three key files from an official FDA FAERS quarterly ASCII ZIP:
   ASCII/DEMO*.txt  — demographics (primaryid, age, sex, event_dt)
   ASCII/DRUG*.txt  — drugs per report (primaryid, drugname, role_cod)
   ASCII/REAC*.txt  — reactions per report (primaryid, pt)
+    ASCII/OUTC*.txt  — patient outcomes (primaryid, outc_cod)
 
 Delimiter : $ (dollar sign) — verified against FDA ASC_NTS documentation
 Encoding  : UTF-8 (FAERS post-2014 Q3); Latin-1 fallback for older files
@@ -40,7 +41,7 @@ from datetime import date, datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from database.models import (
     DrugEventPairModel,
@@ -65,6 +66,10 @@ class FAERSAlreadyImportedError(Exception):
 _DemoRow = Dict[str, str]
 _DrugRow = Dict[str, str]
 _ReacRow = Dict[str, str]
+_OutcomeRow = Dict[str, str]
+
+SERIOUS_OUTCOME_CODES = {"DE", "LT", "HO", "DS", "CA", "RI", "OT"}
+INGESTION_BATCH_SIZE = 5_000
 
 
 # ---------------------------------------------------------------------------
@@ -126,7 +131,7 @@ def _find_file_in_zip(zf: zipfile.ZipFile, prefix: str) -> Optional[str]:
     Return the ZipFile member name for a FAERS ASCII data file.
 
     FDA naming convention: ASCII/DEMO24Q1.txt, ASCII/drug24q1.TXT, etc.
-    The prefix is one of 'DEMO', 'DRUG', 'REAC' (case-insensitive).
+    The prefix is one of 'DEMO', 'DRUG', 'REAC', or 'OUTC' (case-insensitive).
     """
     prefix_upper = prefix.upper()
     for name in zf.namelist():
@@ -243,9 +248,88 @@ def parse_reac_file(content: str) -> Dict[str, List[str]]:
     return dict(reactions)
 
 
+def parse_outc_file(content: str) -> Dict[str, List[str]]:
+    """Parse OUTC*.txt into outcome codes grouped by FAERS primaryid."""
+    outcomes: Dict[str, List[str]] = defaultdict(list)
+    seen: Dict[str, set] = defaultdict(set)
+
+    reader = csv.DictReader(
+        io.StringIO(content),
+        delimiter="$",
+        quoting=csv.QUOTE_NONE,
+    )
+    reader.fieldnames = (
+        [f.strip().lower() for f in reader.fieldnames]
+        if reader.fieldnames
+        else []
+    )
+    for row in reader:
+        pid = row.get("primaryid", "").strip()
+        code = row.get("outc_cod", "").strip().upper()
+        if not pid or not code or code in seen[pid]:
+            continue
+        outcomes[pid].append(code)
+        seen[pid].add(code)
+
+    return dict(outcomes)
+
+
+def _seriousness_for_outcomes(codes: List[str]) -> tuple[str, List[str]]:
+    """Classify only from official FAERS OUTC codes."""
+    serious_codes = sorted({code for code in codes if code in SERIOUS_OUTCOME_CODES})
+    return ("Serious", serious_codes) if serious_codes else ("Non-serious", [])
+
+
 # ---------------------------------------------------------------------------
 # Core ingestion function
 # ---------------------------------------------------------------------------
+
+def _commit_report_batch(
+    session_factory: sessionmaker,
+    reports: List[ProcessedReportModel],
+    pair_counts: Dict[Tuple[str, str], int],
+    release_id: str,
+) -> int:
+    """Persist one bounded report/pair batch and commit it independently."""
+    if not reports:
+        return 0
+
+    with session_factory() as db:
+        try:
+            db.bulk_save_objects(reports)
+            existing_pairs = {
+                (pair.drug_name, pair.event_name): pair
+                for pair in db.scalars(
+                    select(DrugEventPairModel).where(
+                        DrugEventPairModel.quarter == release_id
+                    )
+                ).all()
+            }
+            for (drug, event), count in pair_counts.items():
+                existing_pair = existing_pairs.get((drug, event))
+                if existing_pair:
+                    existing_pair.count += count
+                else:
+                    db.add(
+                        DrugEventPairModel(
+                            drug_name=drug,
+                            event_name=event,
+                            count=count,
+                            quarter=release_id,
+                        )
+                    )
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
+
+    logger.info(
+        "Committed ingestion batch: quarter=%s reports=%d pairs=%d",
+        release_id,
+        len(reports),
+        len(pair_counts),
+    )
+    return len(pair_counts)
 
 def ingest_faers_zip(
     db: Session,
@@ -258,7 +342,7 @@ def ingest_faers_zip(
 
     Parameters
     ----------
-    db               : SQLAlchemy session (caller manages commit/rollback)
+    db               : SQLAlchemy session used for bounded batch commits
     quarter          : Quarter identifier, e.g. "2024Q1"
     zip_path         : Filesystem path to the official FDA ASCII ZIP file
     processing_version : Version tag stored in metadata (default "v1.0.0")
@@ -292,6 +376,7 @@ def ingest_faers_zip(
         demo_name = _find_file_in_zip(zf, "DEMO")
         drug_name = _find_file_in_zip(zf, "DRUG")
         reac_name = _find_file_in_zip(zf, "REAC")
+        outc_name = _find_file_in_zip(zf, "OUTC")
 
         if not demo_name:
             raise KeyError(f"DEMO*.txt not found in ZIP '{zip_path}'")
@@ -316,6 +401,11 @@ def ingest_faers_zip(
         logger.info("Parsing REAC file: %s", reac_name)
         reac_map = parse_reac_file(_read(reac_name))
 
+        outc_map: Dict[str, List[str]] = {}
+        if outc_name:
+            logger.info("Parsing OUTC file: %s", outc_name)
+            outc_map = parse_outc_file(_read(outc_name))
+
     # -- Build normalised reports --------------------------------------------
     all_pids = set(demo_map) | set(drug_map)
     logger.info("Building normalised reports for %d primaryids", len(all_pids))
@@ -328,9 +418,19 @@ def ingest_faers_zip(
             )
         ).all()
     )
+    bind = db.get_bind()
+    session_factory = sessionmaker(
+        bind=bind,
+        autoflush=False,
+        expire_on_commit=False,
+    )
+    # Release the caller's read-only transaction before opening batch sessions.
+    db.rollback()
 
     reports_to_insert: List[ProcessedReportModel] = []
     pair_counts: Dict[Tuple[str, str], int] = defaultdict(int)
+    reports_inserted = 0
+    pairs_upserted = 0
 
     for pid in all_pids:
         if pid in existing_ids:
@@ -350,6 +450,7 @@ def ingest_faers_zip(
         patient_sex = _normalize_sex(demo.get("sex", ""))
         event_dt_raw = demo.get("event_dt", "").strip()
         event_date = event_dt_raw if event_dt_raw else None
+        seriousness, seriousness_codes = _seriousness_for_outcomes(outc_map.get(pid, [])) if pid in outc_map else ("Unknown", [])
 
         reports_to_insert.append(
             ProcessedReportModel(
@@ -359,6 +460,8 @@ def ingest_faers_zip(
                 patient_age=patient_age,
                 patient_sex=patient_sex,
                 event_date=event_date,
+                seriousness=seriousness,
+                seriousness_codes=seriousness_codes,
                 report_quarter=release_id,
                 source="FDA_FAERS",
             )
@@ -368,52 +471,46 @@ def ingest_faers_zip(
         for reaction in reactions:
             pair_counts[(drug, reaction)] += 1
 
-    # -- Bulk insert processed reports ---------------------------------------
-    if reports_to_insert:
-        db.bulk_save_objects(reports_to_insert)
-        logger.info("Inserted %d processed reports", len(reports_to_insert))
-
-    # -- Upsert drug-event pairs ---------------------------------------------
-    pairs_upserted = 0
-    for (drug, event), count in pair_counts.items():
-        existing_pair = db.scalar(
-            select(DrugEventPairModel).where(
-                DrugEventPairModel.drug_name == drug,
-                DrugEventPairModel.event_name == event,
-                DrugEventPairModel.quarter == release_id,
+        if len(reports_to_insert) >= INGESTION_BATCH_SIZE:
+            pairs_upserted += _commit_report_batch(
+                session_factory, reports_to_insert, pair_counts, release_id
             )
+            reports_inserted += len(reports_to_insert)
+            existing_ids.update(report.report_id for report in reports_to_insert)
+            reports_to_insert = []
+            pair_counts = defaultdict(int)
+
+    # -- Commit the final bounded report/pair batch --------------------------
+    if reports_to_insert:
+        pairs_upserted += _commit_report_batch(
+            session_factory, reports_to_insert, pair_counts, release_id
         )
-        if existing_pair:
-            existing_pair.count += count
-        else:
-            db.add(
-                DrugEventPairModel(
-                    drug_name=drug,
-                    event_name=event,
-                    count=count,
+        reports_inserted += len(reports_to_insert)
+
+    # Metadata is written last and marks a complete import. A rerun after a
+    # mid-import failure skips the already committed report IDs.
+    with session_factory() as metadata_db:
+        try:
+            metadata_db.add(
+                FAERSQuarterlyMetadataModel(
+                    release_id=release_id,
                     quarter=release_id,
+                    dataset_release=f"FDA FAERS {release_id}",
+                    import_date=date.today(),
+                    processing_version=processing_version,
+                    total_reports=reports_inserted,
+                    processed_at=datetime.now(timezone.utc),
                 )
             )
-        pairs_upserted += 1
+            metadata_db.commit()
+        except Exception:
+            metadata_db.rollback()
+            raise
 
-    # -- Write metadata row --------------------------------------------------
-    db.add(
-        FAERSQuarterlyMetadataModel(
-            release_id=release_id,
-            quarter=release_id,
-            dataset_release=f"FDA FAERS {release_id}",
-            import_date=date.today(),
-            processing_version=processing_version,
-            total_reports=len(reports_to_insert),
-            processed_at=datetime.now(timezone.utc),
-        )
-    )
-
-    db.flush()
     logger.info(
         "Ingestion complete: quarter=%s reports=%d pairs=%d",
         release_id,
-        len(reports_to_insert),
+        reports_inserted,
         pairs_upserted,
     )
-    return len(reports_to_insert), pairs_upserted
+    return reports_inserted, pairs_upserted

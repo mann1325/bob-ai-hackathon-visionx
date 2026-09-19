@@ -1,237 +1,135 @@
-# Solution Overview
-
-# SignalTrace
+# SignalTrace Solution Overview
 
 ## One-Line Description
 
-**SignalTrace is an AI-assisted pharmacovigilance decision-support platform built on official FDA FAERS quarterly data and a deterministic SignalTrace-owned signal-detection pipeline to identify candidate drug safety signals, explain their evidence, and help users assess potential regulatory document impact. Project materials describe a Machine-Geist foundation, but its provenance is unverified.**
+SignalTrace is an AI-assisted pharmacovigilance decision-support platform that connects deterministic FDA FAERS candidate-signal analysis with structured evidence investigation, potential regulatory review, document intelligence, and human review.
 
----
+## Implemented Solution
 
-# Core Solution
-
-SignalTrace separates the system into two important layers.
-
-## Primary Signal Engine
+SignalTrace is organized around a reviewer workflow rather than a single score:
 
 ```text
-Official FDA FAERS Quarterly Data
-              +
-Machine-Geist Signal Detection Foundation
-              ↓
-Data Processing
-              ↓
-Drug–Event Analysis
-              ↓
-PRR / ROR / Supporting Metrics
-              ↓
-Candidate Safety Signals
-```
-
-This is the **main analytical engine**.
-
-The goal is to use a reproducible historical dataset rather than depending on a live API for every statistical calculation.
-
----
-
-## SignalTrace Investigation Layer
-
-```text
-Candidate Safety Signal
-        ↓
-Evidence Dashboard
-        ↓
-Case Quality Analysis
-        ↓
-Potential Duplicate Triage
-        ↓
-Groq AI Explanation
-        ↓
-Regulatory Impact Rules
-        ↓
-Potential Documents for Review
-        ↓
-Gemini Document Analysis
-        ↓
-Potential Coverage Gap
-        ↓
+Signal Queue
+    |
+    v
+Investigation Overview
+    |
+    +--> Evidence Explorer
+    +--> Case Quality
+    +--> Potential Duplicate Triage
+    +--> Reporting Trend
+    +--> Groq Evidence Explanation
+    +--> Regulatory Review
+    +--> Gemini Document Intelligence
+    |
+    v
 Human Review
 ```
 
----
+The current database contains the imported **2026Q1** dataset. The demonstrated trend use case includes historical **2025Q4** values extracted from the official FDA archive; those values should not be described as a full report-level 2025Q4 import into `processed_reports`.
 
-# Optional openFDA Layer
+## Investigation Workflow
 
-openFDA is **not the primary signal engine**.
+### 1. Signal Queue
 
-It is used as an optional live/search layer.
+The queue presents candidate drug-event signals with search, priority and review-status filtering, sorting, pagination, responsive cards, and an explicit investigation action.
 
-```text
-User Search
-    ↓
-openFDA API
-    ↓
-Quick Drug Lookup
-Live / Recent Information
-Additional Data Exploration
-```
+### 2. Overview and Investigation Summary
 
-This layer can improve the user experience but does not replace the reproducible quarterly-data signal engine.
+The overview keeps the selected drug, event, signal ID, priority, review status, release, report count, PRR, ROR, chi-square, and available trend score in context. Investigation Summary adds the why-flagged explanation, provenance, limitations, and progressively disclosed technical sections.
 
----
+### 3. Evidence Explorer
 
-# Key Components
+Evidence Explorer lists supporting processed FAERS reports. Users can inspect report ID, drug, reactions, seriousness, date, quarter, and source. Detail opens in a desktop drawer or mobile sheet. Seriousness is based on official FAERS outcome evidence where available.
 
-## 1. Official FDA Quarterly Data
+### 4. Case Quality
 
-Used for the main historical signal-analysis pipeline.
+Case Quality reports completeness and data limitations, including quality score, missing age, missing sex, missing event date, quality flags, and indicators.
 
-Benefits:
+### 5. Potential Duplicate Triage
 
-- Structured historical data.
-- Reproducible analysis.
-- Large-scale signal processing.
-- Consistent dataset snapshots.
+Duplicate Triage presents potential duplicate candidates for human assessment. Results include candidate status, similarity, matched fields, report pair, date proximity, and rationale. The system does not automatically delete or merge reports.
 
----
+### 6. Reporting Trend
 
-## 2. Machine-Geist Foundation (provenance unverified)
+The shared trend scorer evaluates valid quarterly count points. It requires at least two valid points and returns a normalized slope-based score; otherwise the score is unavailable. The score describes reporting behavior, not disease incidence or causality.
 
-Project materials describe an existing Machine-Geist repository as a starting
-foundation, but no exact source, version, reused component, or attribution is
-verifiable in this repository. The current signal-detection pipeline is
-SignalTrace-owned.
+### 7. Grounded AI Evidence Explanation
 
-The team should:
+The Groq explanation service builds a structured fact map from backend evidence, including statistical metrics, trend data, quality information, potential duplicate counts, limitations, and regulatory matches. Groq returns:
 
-- Understand the existing architecture first.
-- Identify reusable FAERS processing components.
-- Preserve correct existing signal logic where possible.
-- Modify only what is required for SignalTrace.
-
-SignalTrace is not simply a copy of the repository. It extends the signal pipeline into:
-
-```text
-Signal Detection
-      ↓
-Evidence Investigation
-      ↓
-AI Explanation
-      ↓
-Regulatory Impact
-      ↓
-Document Intelligence
-```
-
----
-
-## 3. Case Quality and Potential Duplicate Triage
-
-SignalTrace highlights:
-
-- Missing information.
-- Incomplete cases.
-- Potentially similar reports.
-
-Potential duplicates may use:
-
-- Drug similarity.
-- Event similarity.
-- Age similarity.
-- Sex similarity.
-- Date proximity.
-
-A potential duplicate is never automatically deleted.
-
----
-
-## 4. Groq AI
-
-Groq is used to explain structured evidence.
-
-Possible outputs:
-
-- Why the candidate signal was flagged.
+- Why the candidate was flagged.
 - Evidence summary.
-- Important limitations.
+- Limitations.
 - Suggested investigation questions.
 
-Core rule:
+The AI does not calculate PRR, ROR, chi-square, report counts, or final risk decisions. Its output is advisory and requires human validation.
+
+### 8. Regulatory Review
+
+The deterministic rule engine evaluates signal facts and returns Potential Review Areas and rule matches. Supported results may include Product Label, Reference Safety Information, Risk Management Plan, and other areas represented by the active rules. These results are triage guidance, not confirmed regulatory deficiencies or final decisions.
+
+### 9. Document Intelligence
+
+Users can upload PDF, DOCX, or TXT safety/regulatory documents. The backend extracts text and Gemini analyzes the document against signal context to identify relevant sections, existing related content, and potential coverage gaps. Results require professional human review. The current dossier-append action is not available.
+
+### 10. Human Review
+
+Human Review provides:
+
+- Review status: not started, in review, or reviewed.
+- Six-item evidence checklist.
+- Reviewer notes.
+- Human-authored conclusion.
+- Save feedback and timestamp.
+- Confirmation before marking a signal reviewed.
+
+## Round 2 Improvements
+
+The implemented Round 2 frontend improves the investigation workflow without replacing the SignalTrace visual identity:
+
+- Bounded investigation workspace for large screens.
+- Responsive Signal Queue table/cards.
+- Persistent investigation context header.
+- Investigation tabs with preserved component state during switching.
+- Progressive disclosure for dense summary content.
+- Evidence report drawer and mobile sheet behavior.
+- Compact document upload and AI empty states.
+- Quality/duplicate layout that collapses at narrower widths.
+- Human-review progress and save-state visibility.
+- Original light SignalTrace theme, navy/royal-blue branding, pastel surfaces, and medicine splash preserved.
+
+## Technology Stack
+
+| Layer | Implementation |
+|---|---|
+| Data ingestion | Python FAERS ASCII loaders, normalization, case processing, pair generation |
+| Signal computation | Python deterministic metrics and candidate detection; PRR, ROR, chi-square, counts, trend |
+| Database | SQLAlchemy and Alembic with PostgreSQL-compatible deployment |
+| API | FastAPI, Pydantic schemas, Uvicorn |
+| Frontend | Next.js 16, React 19, TypeScript |
+| AI | Groq evidence explanation; Gemini document analysis |
+| Auxiliary lookup | openFDA API |
+| Verification | pytest backend suite, ESLint, Next.js production build |
+
+## Evidence and Safeguards
+
+SignalTrace intentionally separates:
 
 ```text
-DATA + CODE = FACTS
-
-AI = EXPLANATION
+Deterministic backend facts
+            |
+            +--> Human-readable UI evidence
+            +--> Groq advisory explanation
+            +--> Deterministic regulatory rules
+            +--> Gemini document assistance
+            |
+            v
+Qualified human review
 ```
 
----
+The system does not claim causality, does not declare a medicine unsafe, does not diagnose patients, does not make automatic regulatory submissions, and does not automatically resolve duplicate candidates. Human review remains the final control point.
 
-## 5. Regulatory Impact Rule Engine
+## Current Status
 
-A deterministic rule layer maps signal characteristics to possible review areas.
-
-```text
-Signal Attributes
-        ↓
-Rule Evaluation
-        ↓
-Potential Regulatory Documents for Review
-```
-
-Examples may include:
-
-- Product Label.
-- Reference Safety Information.
-- PSUR/PBRER.
-- Risk Management Plan.
-- Relevant CTD safety content.
-
-The rules produce traceable mappings; AI may explain them.
-
----
-
-## 6. Gemini Document Analysis
-
-Users can upload safety or regulatory documents.
-
-Gemini assists with:
-
-- Finding relevant sections.
-- Identifying existing related content.
-- Comparing signal context with document content.
-- Highlighting possible coverage gaps.
-
-The output is:
-
-> **Potential gap requiring human review**, not a confirmed regulatory deficiency.
-
----
-
-# Development Approach: IBM Bob
-
-IBM Bob is used by the development team.
-
-It is not part of the SignalTrace production architecture.
-
-Recommended workflow:
-
-```text
-Existing Repository
-       ↓
-IBM Bob Ask Mode
-Understand Codebase
-       ↓
-IBM Bob Plan Mode
-Plan Modifications
-       ↓
-Team Review
-       ↓
-IBM Bob Agent Mode
-Implement Approved Feature
-       ↓
-Testing
-       ↓
-Review Changes
-       ↓
-Git Commit
-```
+The current repository contains the implemented end-to-end investigation workspace, FastAPI APIs, deterministic pipeline and scoring utilities, PostgreSQL-compatible persistence, Groq/Gemini integration paths, openFDA lookup, responsive frontend, developer isolation routes, and automated tests. The populated application dataset is 2026Q1; 2025Q4 is limited to the demonstrated historical trend use case described above.

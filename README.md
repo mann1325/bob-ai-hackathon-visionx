@@ -1,143 +1,234 @@
-# 🚀 SignalTrace
+# SignalTrace
 
-> AI-assisted pharmacovigilance decision-support platform — from candidate safety signal to potential regulatory impact.
+SignalTrace is an AI-assisted pharmacovigilance decision-support workspace that takes candidate drug-event signals from official FDA FAERS data through evidence investigation, potential regulatory review, document intelligence, and qualified human review.
 
----
+## Problem
 
-## 👥 Team
+Pharmacovigilance teams can detect unusual drug-event associations, but detection is only the beginning. Reviewers must understand the statistical evidence, inspect supporting reports, assess case completeness, triage possible duplicates, examine reporting behavior over time, identify potential regulatory review areas, and record a defensible human assessment. These tasks are often spread across datasets, scripts, spreadsheets, reports, and document review tools.
 
-| Field | Value |
-|---|---|
-| **Team Name** | VisionX |
-| **Track** | AI |
-| **Team Lead** | Sharanam Katwala — 24aiml063@charusat.edu.in |
-| **Members** | Mann Shah — 24dce128@charusat.edu.in, Jiya Sadaria — 24aiml054@charusat.edu.in, Harshil Thakkar — 24aiml068@charusat.edu.in |
+SignalTrace connects those steps without turning an AI output into a safety or regulatory decision.
 
----
+## Solution Workflow
 
-## 🎯 Problem Statement
-
-Pharmacovigilance teams can detect candidate drug safety signals from FDA FAERS adverse-event data, but the work doesn't stop there — reviewers still need to check case quality, screen for duplicates, understand the statistical evidence, and figure out which regulatory documents (labels, PSUR/PBRER, RMP, CTD content) might need attention. Today that investigation and handoff to regulatory teams happens manually across spreadsheets, exports, and separate systems, which is slow and easy to lose track of.
-
----
-
-## 💡 Solution
-
-SignalTrace uses official FDA FAERS quarterly data and a deterministic SignalTrace-owned signal-detection pipeline to produce candidate drug-event signals with transparent PRR/ROR/trend metrics. Project materials describe a Machine-Geist foundation, but the exact source and code reuse are not verifiable; see the provenance audit. From there, it builds a structured evidence package — case quality, potential duplicate triage, temporal relationship, dechallenge/rechallenge — and uses Groq to explain that evidence in plain language, strictly from backend-computed facts (AI never generates the core statistics). A deterministic rule engine then maps each signal to the regulatory documents it may affect, and Gemini analyzes uploaded documents to flag relevant sections, inconsistencies, and coverage gaps. Every output is explicitly framed as decision support requiring human review — the system never claims causality, confirms a drug is unsafe, or auto-modifies/submits regulatory documents.
-
----
-
-## ✨ Key Features
-
-- **Deterministic signal detection:** PRR/ROR/trend calculation on official FDA FAERS quarterly data; Machine-Geist provenance is documented as unverified
-- **Case quality analysis:** flags missing information (event date, concomitant meds, narrative) with an explainable quality score
-- **Potential duplicate triage:** both case-version deduplication and cross-case duplicate clustering — flagged for human review, never auto-deleted
-- **Groq-powered evidence explanation:** summarizes why a signal was flagged and highlights limitations, grounded entirely in backend-generated facts
-- **Signal-to-regulatory impact bridge + Gemini document intelligence:** deterministic mapping from a signal to potentially affected documents (Product Label, RSI, PSUR/PBRER, RMP, CTD content), plus Gemini analysis of uploaded documents for relevant sections and coverage gaps
-
----
-
-## 🛠️ Tech Stack
-
-| Category | Technologies |
-|---|---|
-| **Languages** | Python, TypeScript |
-| **Frameworks** | FastAPI, Next.js, React |
-| **IBM Technologies** | IBM Bob |
-| **Databases** | PostgreSQL / Supabase |
-| **Other** | Groq API, Gemini API, FDA FAERS Quarterly Data, openFDA API (optional) |
-
----
-
-## 📁 Repository Structure
-
-```
-├── src/                  # All source code
-├── docs/                 # Written documentation
-│   ├── problem-statement.md
-│   ├── solution-overview.md
-│   ├── architecture.md
-│   └── setup-guide.md
-├── demo/                 # Demo artifacts
-│   ├── screenshots/      # App screenshots
-│   └── demo-video-link.txt  # Link to demo video
-├── presentation/         # Slide deck
-└── submission.yaml       # Structured submission metadata
+```text
+Official FDA FAERS quarterly data
+            |
+            v
+Deterministic ingestion and signal detection
+(PRR, ROR, chi-square, report counts, trend data)
+            |
+            v
+Candidate Signal Queue
+            |
+            v
+Investigation workspace
+  Overview | Evidence | Quality / Duplicates
+  Regulatory | Documents | Human Review
+            |
+            v
+Human-authored review and conclusion
 ```
 
----
+The current demonstrated dataset imported into the Neon/PostgreSQL-compatible database is **2026Q1**. Historical **2025Q4** values used for the demonstrated reporting-trend calculation were extracted from the official FDA archive for that trend use case; they are not represented as a full 2025Q4 report-level import in `processed_reports`.
 
-## ⚡ How to Run
+## Key Features
 
-> Copied from [`docs/setup-guide.md`](docs/setup-guide.md) — confirm these match your final `src/` layout before submitting.
+- **Signal detection:** deterministic drug-event analysis with PRR, ROR, chi-square, supporting report counts, ranking, and reporting-trend data.
+- **Signal Queue:** searchable, filterable, sortable candidate signal list with priority, review status, pagination, and investigation entry points.
+- **Investigation Summary:** compact signal context, why the signal was flagged, provenance, limitations, and progressively disclosed supporting details.
+- **Evidence Explorer:** paginated supporting FAERS reports with seriousness derived from official outcome codes and report detail inspection.
+- **Case Quality:** completeness score, missing age/sex/event-date counts, quality flags, and indicators.
+- **Duplicate Triage:** potential duplicate candidates with similarity, matched fields, date proximity, rationale, and human-review status. No automatic deletion occurs.
+- **Reporting Trend:** computed trend score when at least two valid trend points are available; otherwise the value remains unavailable.
+- **Grounded AI Evidence Explanation:** Groq receives backend-computed evidence facts and returns an advisory explanation, limitations, and suggested investigation questions.
+- **Regulatory Review:** deterministic rules return Potential Review Areas and rule matches for documents such as Product Label, RSI, and RMP where supported by the data. These are not confirmed deficiencies.
+- **Document Intelligence:** PDF, DOCX, and TXT upload, text extraction, and Gemini-assisted relevant-section and potential-coverage-gap analysis.
+- **Human Review:** reviewer status, six evidence checklist items, notes, human-authored conclusion, save feedback, and audit timestamps.
+- **Auxiliary openFDA search:** a separate live lookup utility; it is not part of the primary signal-detection calculation.
 
-```bash
-# 1. Clone the repo
-git clone https://github.com/mann1325/bob-ai-hackathon-visionx.git
-cd bob-ai-hackathon-visionx
+## Architecture
 
-# 2. Backend setup
-cd backend
-python -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
+```mermaid
+graph TD
+  A[FDA FAERS quarterly files] --> B[src/data_pipeline]
+  B --> C[Normalized reports and candidate signal artifacts]
+  C --> D[src/ml enrichment and import utilities]
+  D --> E[(PostgreSQL / Neon-compatible database)]
+  E --> F[FastAPI /api/v1]
+  F --> G[Next.js React investigation workspace]
+  F --> H[Groq grounded explanation]
+  F --> I[Deterministic regulatory rules]
+  F --> J[Gemini document analysis]
+  G --> K[Human review]
+```
+
+### Repository structure
+
+```text
+src/
+  backend/       FastAPI app, services, rules, AI clients, database, tests
+  data_pipeline/ FAERS loading, normalization, metrics, signal detection
+  ml/            trend/risk/ranking/enrichment and database import utilities
+  frontend/      Next.js App Router UI and API adapters
+  shared/        shared schemas and API contracts
+
+docs/            Project documentation
+data/            Local database and data artifacts
+demo/            Demo links and screenshots
+presentation/    Presentation materials
+```
+
+### API and frontend boundaries
+
+The backend owns data access, deterministic calculations, investigation services, AI calls, document processing, regulatory rules, and review persistence. The frontend uses a typed `ApiClient` with a real adapter for FastAPI and a mock adapter for isolated demonstrations. No frontend calculation replaces backend signal logic.
+
+## Tech Stack
+
+| Area | Current implementation |
+|---|---|
+| Backend | Python, FastAPI, Uvicorn, Pydantic Settings |
+| Frontend | Next.js 16, React 19, TypeScript |
+| Database | SQLAlchemy, Alembic, PostgreSQL-compatible deployment; SQLite is used by tests/development paths where configured |
+| Signal/data pipeline | Python, pandas, official FDA FAERS quarterly ASCII files |
+| AI services | Groq for grounded evidence explanation; Gemini for document analysis |
+| Auxiliary data | openFDA API live lookup |
+| Testing | pytest, pytest-asyncio, frontend ESLint and Next.js build |
+
+## Data and Statistical Evidence
+
+The pipeline reads official FDA FAERS quarterly ASCII tables, normalizes cases and drug-event pairs, computes deterministic metrics, and exports/imports candidate signals and supporting metrics.
+
+- **PRR:** proportional reporting ratio.
+- **ROR:** reporting odds ratio where available.
+- **Chi-square:** contingency-table signal-strength statistic.
+- **Trend score:** a normalized slope over valid quarterly counts, calculated by the shared `compute_trend_score()` implementation. Fewer than two valid points produce `null`/`--`.
+
+Spontaneous FAERS reports are useful for signal detection but do not establish causality, incidence, or drug safety.
+
+## Setup
+
+### Prerequisites
+
+- Git
+- Python 3.11 or newer
+- Node.js compatible with the Next.js 16 project
+- PostgreSQL-compatible database for the populated application, such as Neon/PostgreSQL
+- API keys only for the optional Groq, Gemini, and openFDA-backed capabilities
+
+### Backend
+
+```powershell
+cd src/backend
+python -m venv .venv
+.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+```
 
-# 3. Configure environment
-cp .env.example .env
-# Fill in: DATABASE_URL, GROQ_API_KEY, GEMINI_API_KEY, OPENFDA_API_BASE_URL (optional)
+Create `src/.env` with the settings needed by the current backend:
 
-# 4. Run the backend
-uvicorn app.main:app --reload
+```env
+APP_ENV=development
+APP_PORT=8000
+DATABASE_URL=postgresql://user:password@host:5432/database
+GROQ_API_KEY=
+GEMINI_API_KEY=
+OPENFDA_API_BASE_URL=https://api.fda.gov
+OPENFDA_API_KEY=
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+UPLOAD_DIR=data/uploads
+MAX_UPLOAD_SIZE_BYTES=10485760
+```
 
-# 5. Frontend setup (separate terminal)
-cd frontend
+Run migrations against the configured PostgreSQL database:
+
+```powershell
+cd src/backend
+alembic upgrade head
+```
+
+Start the API:
+
+```powershell
+cd src/backend
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+API documentation: `http://127.0.0.1:8000/docs`  
+Health check: `http://127.0.0.1:8000/api/v1/health`
+
+### Frontend
+
+In a second terminal:
+
+```powershell
+cd src/frontend
 npm install
+```
+
+The current frontend environment uses:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_USE_MOCKS=false
+```
+
+`NEXT_PUBLIC_USE_MOCKS=false` selects the real FastAPI adapter. When the variable is not set to `false`, the frontend defaults to its typed mock adapter for isolated demonstrations.
+
+Start the frontend:
+
+```powershell
+cd src/frontend
 npm run dev
 ```
 
----
+Open `http://localhost:3000`.
 
-## 🖥️ Demo
+### Data pipeline
 
-| Artifact | Link |
-|---|---|
-| 📹 Demo Video | [Watch the SignalTrace demo on Google Drive](https://drive.google.com/drive/folders/1kjd-oVTBjvaeNTaoO-1QyQ2mQpKUNbaq?usp=sharing) |
-| 🌐 Live Demo | [Open SignalTrace](https://signaltrace-five.vercel.app/) |
-| 🖼️ Screenshots | [See demo/screenshots/](demo/screenshots/) |
-| 📊 Presentation | [Download the SignalTrace slide deck](presentation/slides.pdf) |
+The deterministic pipeline can be run from the `src` directory when the official quarterly input files are available:
 
----
+```powershell
+cd src
+python -m data_pipeline.run_pipeline --data-dir <faers-quarter-directory> --output-dir <pipeline-output> --quarter 2026Q1
+```
 
-## ⚠️ Known Limitations
+The pipeline writes normalized reports, drug-event pairs, signal metrics, candidate signals, quality information, and a provenance manifest. Database import utilities in `src/ml` reuse the backend SQLAlchemy models and do not replace the backend API.
 
-SignalTrace is a decision-support system by design, not a replacement for expert judgment. As such, it does not:
+## Round 2 Improvements
 
-- Prove causality between a drug and an adverse event
-- Diagnose patients
-- Declare that a medicine is unsafe
-- Replace pharmacovigilance or regulatory professionals
-- Make final regulatory decisions
-- Automatically modify or submit regulatory documents
+The current Round 2 frontend includes:
 
-AI components (Groq, Gemini) are used strictly for explanation and document analysis — never for computing core statistical metrics (PRR/ROR) or determining regulatory impact, which is fully deterministic and rule-based. All flagged signals, potential duplicates, and document gaps require qualified human review before any action is taken.
+- A reviewer-oriented Signal Queue with search, priority/review filters, sorting, pagination, and responsive cards.
+- A persistent investigation header with drug, event, signal ID, priority, review status, release, and report count.
+- Tabbed Overview, Evidence, Quality / Duplicates, Regulatory, Documents, and Human Review sections.
+- Progressive disclosure for dense investigation details.
+- Evidence report drawer behavior with mobile sheet layout, close controls, and Escape handling.
+- Compact, bounded investigation layouts that avoid desktop stretching and mobile overflow.
+- A persistent medicine-themed SignalTrace startup animation without the previous forced multi-second wait.
+- Human-review progress, save state, and confirmation before marking a signal reviewed.
 
----
+## Safety & Limitations
 
-## 🏅 What We're Most Proud Of
+SignalTrace is decision support, not an autonomous safety or regulatory system.
 
-The **Signal-to-Regulatory Impact Bridge** — a deterministic engine that connects a detected safety signal directly to the specific regulatory documents (label, RSI, PSUR/PBRER, RMP, CTD sections) that may need review. This closes a gap that today is handled manually between pharmacovigilance and regulatory teams, and is what differentiates SignalTrace from existing FAERS signal-detection dashboards.
+- Candidate signals require qualified professional pharmacovigilance review.
+- FAERS spontaneous reports do not establish causality, incidence, or proof that a medicine is unsafe.
+- PRR, ROR, chi-square, counts, and trend values are deterministic backend outputs; they are not generated by AI.
+- Groq explanations are grounded in backend-computed facts, advisory, and require validation.
+- Gemini document results identify relevant sections and potential coverage gaps; they are not confirmed deficiencies.
+- Regulatory rule matches are Potential Review Areas, not final regulatory decisions.
+- Potential duplicate results are candidates for human triage; reports are never automatically deleted.
+- The dossier-append action is not available in the current version.
+- The system does not diagnose patients, establish causality, make final regulatory decisions, modify documents automatically, or submit information to regulators.
 
----
+## Current Project Status
 
-## 🤖 How IBM Bob Was Used (Frontend Architecture)
+The implemented application includes the end-to-end candidate-signal investigation workflow described above. The imported database dataset is 2026Q1. The demonstrated 2025Q4 historical trend input is limited to trend use and is not a full report-level import. Backend tests, frontend lint, and the frontend production build are part of the current verification workflow.
 
-During this Hackathon, the **IBM Bob AI Coding Assistant** was leveraged specifically by the frontend engineering team to orchestrate, refine, and bulletproof the React GUI layer of SignalTrace. 
+## Related Documentation
 
-**Key Code Execution by Bob:**
-*   **Component Refactoring**: Automatically decomposed a monolithic dashboard block into six highly isolated, visually uniform React components (utilizing a Consumer Health UI mapping of Native CSS Flex/Grids).
-*   **API Isolation Pattern**: Stripped inline `fetch()` and `axios` network logic directly out of UI components, orchestrating all data flow through a unified `ApiClient` interface.
-*   **Interactive Simulation**: Constructed a fully decoupled, type-safe `MockAdapter` capable of injecting synthetic delays and E2E placeholder data for live demonstration safety. 
-*   **Resiliency & Defenses**: Bob methodically audited UI component life cycles to paint SVG `pulse` skeletal loaders, parse empty data states, and trap arbitrary HTTP crashes within beautifully styled Red graphical banners—ensuring zero unexpected white screens.
-*   **Strict UI Validation**: Iteratively verified against the `tsc --noEmit` and `<NextJS Build>` pipelines, cleaning up lingering React TS prop conflicts for a strict 0-error code freeze.
-
-*(Note: IBM Bob’s actions were severely constrained solely to the presentation, styling, and networking boundaries of the TSX UI layers. All native core backend processing, openFDA queries, LLM integration logics, and PRR metric statistics were externally facilitated by backend/data engineers.)*
+- [Architecture](docs/architecture.md)
+- [Problem statement](docs/problem-statement.md)
+- [Setup guide](docs/setup-guide.md)
+- [Solution overview](docs/solution-overview.md)
+- [API contract](src/backend/shared-schemas/api-contract.yaml)

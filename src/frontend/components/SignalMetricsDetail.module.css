@@ -17,10 +17,15 @@
 
 .panelsGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: start;
   gap: 1.5rem;
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.panelsGrid > * {
   min-width: 0;
 }
 
@@ -68,7 +73,7 @@
   max-width: 100%;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  box-sizing: border-box;
   background: #FFFFFF;
   border: 1px solid rgba(0, 19, 108, 0.06);
   border-radius: var(--border-radius-card);
@@ -97,6 +102,7 @@
 .panelContent {
   flex: 1;
   min-width: 0;
+  box-sizing: border-box;
   padding: 1.5rem;
 }
 
@@ -176,11 +182,116 @@
 }
 
 .expandableSection {
-  margin-top: 1.5rem;
-  overflow: hidden;
+  margin-top: 0.75rem;
+  min-width: 0;
   background: rgba(0, 19, 108, 0.02);
   border: 1px solid rgba(0, 19, 108, 0.1);
   border-radius: var(--border-radius-card);
+}
+
+.investigationSubsection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.subsectionHeading {
+  margin: 0;
+  color: var(--navy);
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.trendSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(0, 19, 108, 0.1);
+}
+
+.trendDescription,
+.trendUnavailable p,
+.trendDisclaimer {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.trendUnavailable {
+  padding: 0.9rem 1rem;
+  background: var(--background-alt);
+  border: 1px solid rgba(0, 19, 108, 0.08);
+  border-radius: 8px;
+}
+
+.trendUnavailable p + p {
+  margin-top: 0.35rem;
+  color: #92400E;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.trendVisualization {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.9rem 1rem;
+  background: var(--background-alt);
+  border: 1px solid rgba(0, 19, 108, 0.08);
+  border-radius: 8px;
+}
+
+.trendRow {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr) 4rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.trendQuarter,
+.trendCount {
+  color: var(--navy);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.trendCount {
+  text-align: right;
+}
+
+.trendBarTrack {
+  display: block;
+  height: 0.6rem;
+  overflow: hidden;
+  background: #E2E8F0;
+  border-radius: 999px;
+}
+
+.trendBar {
+  display: block;
+  height: 100%;
+  min-width: 0.25rem;
+  background: var(--royal-blue);
+  border-radius: inherit;
+}
+
+.trendDisclaimer {
+  margin-top: 0.25rem;
+  color: #92400E;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .trendRow {
+    grid-template-columns: 4.5rem minmax(0, 1fr) 3.25rem;
+    gap: 0.5rem;
+  }
 }
 
 .expandBtn {
@@ -504,7 +615,7 @@
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .panelsGrid {
     grid-template-columns: minmax(0, 1fr);
   }

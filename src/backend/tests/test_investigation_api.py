@@ -1,5 +1,5 @@
-from database.models import DuplicateCandidateModel, ProcessedReportModel
-from services.investigation_service import get_duplicate_candidates_for_signal
+from database.models import DuplicateCandidateModel, ProcessedReportModel, SignalModel
+from services.investigation_service import get_case_quality_for_signal, get_duplicate_candidates_for_signal
 
 
 def test_get_case_quality_prematerialized(client):
@@ -24,6 +24,63 @@ def test_get_case_quality_compute_on_read(client):
     assert body["signal_id"] == "sig-002"
     assert "quality_score" in body
     assert body["quality_score"] >= 0.0
+
+
+def test_case_quality_scopes_reports_to_signal_event_and_quarter(db_session):
+    db_session.add(
+        SignalModel(
+            signal_id="sig-quality-scope",
+            drug_name="SCOPE_DRUG",
+            event_name="TARGET EVENT",
+            supporting_report_count=1,
+            prr=2.0,
+            candidate_status="candidate",
+            dataset_version="2024Q1",
+        )
+    )
+    db_session.add_all(
+        [
+            ProcessedReportModel(
+                report_id="quality-target",
+                drug_name="SCOPE_DRUG",
+                reactions=["TARGET EVENT"],
+                patient_age=None,
+                patient_sex="M",
+                event_date=None,
+                report_quarter="2024Q1",
+                source="FDA_FAERS",
+            ),
+            ProcessedReportModel(
+                report_id="quality-other-event",
+                drug_name="SCOPE_DRUG",
+                reactions=["OTHER EVENT"],
+                patient_age=None,
+                patient_sex=None,
+                event_date=None,
+                report_quarter="2024Q1",
+                source="FDA_FAERS",
+            ),
+            ProcessedReportModel(
+                report_id="quality-wrong-quarter",
+                drug_name="SCOPE_DRUG",
+                reactions=["TARGET EVENT"],
+                patient_age=None,
+                patient_sex=None,
+                event_date=None,
+                report_quarter="2023Q4",
+                source="FDA_FAERS",
+            ),
+        ]
+    )
+    db_session.flush()
+
+    quality = get_case_quality_for_signal(db_session, "sig-quality-scope")
+
+    assert quality is not None
+    assert quality.total_reports == 1
+    assert quality.missing_age_count == 1
+    assert quality.missing_sex_count == 0
+    assert quality.missing_date_count == 1
 
 
 def test_get_case_quality_not_found(client):

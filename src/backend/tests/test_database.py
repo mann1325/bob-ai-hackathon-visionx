@@ -33,3 +33,17 @@ def test_sqlite_engine_initialization(tmp_path):
             engine = get_engine()
             assert engine is not None
             assert str(engine.url).startswith("sqlite")
+
+
+def test_sqlite_engine_creates_schema_for_signal_tables(tmp_path):
+    db_file = tmp_path / "signaltrace.db"
+    sqlite_url = f"sqlite:///{db_file}"
+
+    with patch("database.session.get_settings") as mock_settings:
+        mock_settings.return_value.database_url = sqlite_url
+        with patch("database.session._engine", None), patch("database.session._session_factory", None):
+            engine = get_engine()
+            tables = engine.connect().exec_driver_sql(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='signals'"
+            ).fetchall()
+            assert tables

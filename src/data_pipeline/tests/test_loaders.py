@@ -29,6 +29,12 @@ def test_load_all_counts(test_config):
     assert list(raw.load_stats) == ["DEMO", "DRUG", "REAC", "OUTC"]
 
 
+def test_outc_rows_are_loaded_by_primaryid(test_config):
+    raw = load_all(test_config)
+    assert raw.outc.set_index("primaryid").loc["R001", "outc_cod"] == "DE"
+    assert raw.outc.set_index("primaryid").loc["R005", "outc_cod"] == "LT"
+
+
 def test_missing_file_raises(tmp_path):
     from data_pipeline.config import build_table_specs
     with pytest.raises(MissingFileError):

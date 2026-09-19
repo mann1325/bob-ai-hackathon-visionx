@@ -1,415 +1,172 @@
-# Setup Guide
+# SignalTrace Setup Guide
 
-# SignalTrace
+This guide matches the current repository layout and runtime configuration.
 
-## 1. Project Prerequisites
+## Prerequisites
 
-Install:
+- Git
+- Python 3.11 or newer
+- Node.js suitable for the Next.js 16 project
+- PostgreSQL-compatible database for the populated application, such as Neon/PostgreSQL
+- API keys for Groq and Gemini if those integrations are to be used
 
-```text
-Git
-Python 3.11+
-Node.js 20+
-```
+The automated backend tests use an in-memory SQLite database. Production and populated local deployments use the configured `DATABASE_URL`.
 
-Recommended:
-
-```text
-PostgreSQL or Supabase
-VS Code
-IBM Bob
-```
-
----
-
-# 2. Repository Setup
-
-Project materials describe a selected Machine-Geist signal-detection
-repository, but its exact source and reuse are not verifiable in this
-repository. The current pipeline should be treated as SignalTrace-owned until
-that provenance is established.
-
-Initial workflow:
+## Repository Layout
 
 ```text
-Clone Repository
-      ↓
-Open in IBM Bob
-      ↓
-Ask Mode Analysis
-      ↓
-Understand Existing Pipeline
-      ↓
-Plan Mode
-      ↓
-Approve Changes
-      ↓
-Agent Mode Implementation
+src/
+  backend/       FastAPI application
+  frontend/      Next.js application
+  data_pipeline/ FAERS ingestion and signal-detection pipeline
+  ml/            scoring, enrichment, and import utilities
+  shared/        shared schemas
+  data/          local data/database artifacts
+
+docs/
+  architecture.md
+  problem-statement.md
+  setup-guide.md
+  solution-overview.md
 ```
 
-Do not begin by immediately rewriting the repository.
+## Backend Installation
 
----
+From the repository root:
 
-# 3. Suggested Project Structure
-
-```text
-signaltrace/
-│
-├── signal_engine/
-│   ├── ingestion/
-│   ├── processing/
-│   ├── metrics/
-│   └── ranking/
-│
-├── backend/
-│   ├── api/
-│   ├── services/
-│   ├── rules/
-│   ├── ai/
-│   └── database/
-│
-├── frontend/
-│
-├── data/
-│   ├── raw/
-│   └── processed/
-│
-├── docs/
-│   ├── problem-statement.md
-│   ├── solution-overview.md
-│   ├── architecture.md
-│   ├── setup-guide.md
-│   └── PRD.md
-│
-└── README.md
-```
-
-The exact structure should respect useful existing repository architecture.
-
----
-
-# 4. FDA Quarterly Data Setup
-
-The primary signal engine uses official FDA FAERS quarterly data.
-
-Recommended workflow:
-
-```text
-Quarterly Data Download
-        ↓
-Store Raw Files
-        ↓
-Parse / Normalize
-        ↓
-Load into Database
-        ↓
-Create Drug–Event Dataset
-        ↓
-Run Signal Detection
-```
-
-Keep metadata about:
-
-- Dataset release.
-- Quarter.
-- Import date.
-- Processing version.
-
-This helps reproducibility.
-
----
-
-# 5. Signal Engine Setup
-
-The original Machine-Geist source is not verifiable from this repository; do
-not claim a specific upstream source or code reuse without external evidence.
-
-Before changing signal logic:
-
-## Step 1 — Ask Mode
-
-Example:
-
-> Analyze this repository and explain the complete FAERS data pipeline, important modules, data models, signal-detection calculations, inputs, outputs, and reusable components. Do not modify code.
-
-## Step 2 — Plan Mode
-
-Example:
-
-> We are extending this repository into SignalTrace. Keep the existing signal-detection foundation where appropriate. Create a phased plan for adding a web application, evidence investigation, case-quality analysis, potential duplicate triage, Groq explanation, regulatory rules, Gemini document analysis, and optional openFDA search. Identify every file likely to change. Do not modify code.
-
-## Step 3 — Team Review
-
-Review:
-
-- Reusable code.
-- Data assumptions.
-- Planned changes.
-- Risks.
-- File ownership.
-
-## Step 4 — Agent Mode
-
-Implement only the approved feature.
-
----
-
-# 6. Backend Setup
-
-Recommended:
-
-```text
-FastAPI
-Python
-```
-
-Typical setup:
-
-```bash
-cd backend
-python -m venv venv
-```
-
-Windows:
-
-```bash
-venv\Scripts\activate
-```
-
-macOS/Linux:
-
-```bash
-source venv/bin/activate
-```
-
-Install:
-
-```bash
+```powershell
+cd src/backend
+python -m venv .venv
+.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-Run:
+On macOS/Linux:
 
 ```bash
-uvicorn app.main:app --reload
+cd src/backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
----
+The backend requirements include FastAPI, Uvicorn, Pydantic Settings, SQLAlchemy, PostgreSQL support, Alembic, multipart upload support, PDF/DOCX extraction, and pytest tooling.
 
-# 7. Frontend Setup
+## Backend Environment
 
-Recommended:
-
-```text
-Next.js
-React
-TypeScript
-```
-
-Typical setup:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
----
-
-# 8. Environment Variables
+The backend reads its environment file from `src/.env`.
 
 Example:
 
 ```env
-DATABASE_URL=your_database_connection
-
-GROQ_API_KEY=your_groq_key
-
-GEMINI_API_KEY=your_gemini_key
-
+APP_ENV=development
+APP_PORT=8000
+APP_NAME=SignalTrace API
+DATABASE_URL=postgresql://user:password@host:5432/database
+GROQ_API_KEY=
+GEMINI_API_KEY=
 OPENFDA_API_BASE_URL=https://api.fda.gov
 OPENFDA_API_KEY=
+UPLOAD_DIR=data/uploads
+MAX_UPLOAD_SIZE_BYTES=10485760
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ```
 
-openFDA credentials are optional for the primary signal engine.
+`DATABASE_URL` is required for a populated PostgreSQL/Neon deployment. `GROQ_API_KEY`, `GEMINI_API_KEY`, and the optional openFDA key are only required for their respective integrations. Do not commit credentials.
 
-Never commit `.env`.
+## Database Migrations
 
----
+From `src/backend`, run migrations against the configured PostgreSQL-compatible database:
 
-# 9. Development Phases
-
-## Phase 1 — Repository Understanding
-
-Use IBM Bob Ask Mode.
-
-Output:
-
-- Architecture map.
-- Signal pipeline understanding.
-- Reusable components.
-- Risk list.
-
-## Phase 2 — Dataset Pipeline
-
-Set up:
-
-```text
-FDA Quarterly Data
-       ↓
-Import
-       ↓
-Normalization
-       ↓
-Database / Processed Dataset
+```powershell
+alembic upgrade head
 ```
 
-## Phase 3 — Signal Engine
+The application does not run `create_all()` on startup. Alembic owns production schema changes.
 
-Validate:
+## Start the Backend
 
-```text
-Drug–Event Pairs
-PRR
-ROR
-Counts
-Trends
-Ranking
+```powershell
+cd src/backend
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-## Phase 4 — SignalTrace API
+Useful endpoints:
 
-Expose:
+- API docs: `http://127.0.0.1:8000/docs`
+- Health: `http://127.0.0.1:8000/api/v1/health`
+- Signal list: `http://127.0.0.1:8000/api/v1/signals`
 
-- Drug search.
-- Candidate signals.
-- Signal details.
-- Evidence data.
+## Frontend Installation
 
-## Phase 5 — Frontend
+In a second terminal:
 
-Build:
-
-- Dashboard.
-- Signal table.
-- Signal detail view.
-
-## Phase 6 — Investigation Features
-
-Add:
-
-- Case quality.
-- Potential duplicate triage.
-
-## Phase 7 — Groq
-
-Add AI explanation using backend-generated facts.
-
-## Phase 8 — Regulatory Rules
-
-Add deterministic signal-to-document mapping.
-
-## Phase 9 — Gemini
-
-Add document upload and analysis.
-
-## Phase 10 — Optional openFDA
-
-Add as a separate live/search feature.
-
----
-
-# 10. Team Collaboration Rules
-
-- One owner per major feature.
-- Do not edit the same file simultaneously.
-- Shared schemas must be agreed before changing.
-- Do not silently modify API contracts.
-- Use branches.
-- Review before merging.
-- Keep commits small and logical.
-
----
-
-# 11. Testing Checklist
-
-## Quarterly Data
-
-```text
-[ ] Dataset imports correctly
-[ ] Quarter metadata is stored
-[ ] Data normalization works
+```powershell
+cd src/frontend
+npm install
 ```
 
-## Signal Engine
+The frontend uses Next.js 16.3.5, React 19.2.8, TypeScript, and ESLint. No additional UI framework is required.
 
-```text
-[ ] Drug-event pairs work
-[ ] PRR is correct
-[ ] ROR is correct where implemented
-[ ] Counts are correct
-[ ] Ranking works
+## Frontend Environment
+
+The current local frontend configuration is:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_USE_MOCKS=false
 ```
 
-## Investigation
+`NEXT_PUBLIC_USE_MOCKS=false` selects the real FastAPI adapter. If it is not exactly `false`, the frontend defaults to its typed `MockAdapter`, which is useful for the `/dev/*` isolation routes.
 
-```text
-[ ] Quality issues are identified
-[ ] Potential duplicates are explainable
-[ ] No reports are automatically deleted
+Start the frontend:
+
+```powershell
+cd src/frontend
+npm run dev
 ```
 
-## AI
+Open `http://localhost:3000`.
 
-```text
-[ ] Groq receives structured facts
-[ ] Groq does not calculate core metrics
-[ ] Gemini identifies relevant content
-[ ] AI output is clearly labelled as assistance
+Other available scripts:
+
+```powershell
+npm run lint
+npm run build
+npm run start
 ```
 
-## openFDA
+## Data Pipeline
 
-```text
-[ ] Optional search works
-[ ] API failure does not break core signal engine
+The primary pipeline consumes the official FDA FAERS quarterly ASCII files. From `src`, with the required quarter files available:
+
+```powershell
+python -m data_pipeline.run_pipeline --data-dir <faers-quarter-directory> --output-dir <pipeline-output> --quarter 2026Q1
 ```
 
----
+The runner produces normalized reports, drug-event pairs, signal metrics, candidate signals, quality output, and a provenance manifest. Database import utilities in `src/ml` reuse the backend models.
 
-# 12. Final Demo Flow
+The current populated database dataset is **2026Q1**. Historical **2025Q4** values used for the demonstrated trend calculation were extracted from the official FDA archive for that use case; do not treat them as a full `processed_reports` import.
 
-```text
-1. Select a Drug
-        ↓
-2. Show Historical FDA Quarterly Data Basis
-        ↓
-3. Show Candidate Signal
-        ↓
-4. Show PRR / ROR / Counts / Trend
-        ↓
-5. Show Case Quality and Duplicate Triage
-        ↓
-6. Groq Explains Evidence
-        ↓
-7. Regulatory Rule Engine Maps Review Areas
-        ↓
-8. Upload Regulatory / Safety Document
-        ↓
-9. Gemini Finds Relevant Content
-        ↓
-10. Show Potential Coverage Gap
-        ↓
-11. HUMAN REVIEW REQUIRED
+## Tests
+
+Backend tests:
+
+```powershell
+cd src/backend
+pytest -q
 ```
 
-Optional demonstration:
+Frontend checks:
 
-```text
-User Search
-      ↓
-openFDA
-      ↓
-Live / Quick Data Exploration
+```powershell
+cd src/frontend
+npm run lint
+npm run build
 ```
+
+## Common Local Issues
+
+- If the frontend shows no live signals, confirm the backend is running, `NEXT_PUBLIC_API_URL` points to it, CORS includes the frontend origin, and `NEXT_PUBLIC_USE_MOCKS=false` is loaded by the Next.js process.
+- Restart the frontend after changing `NEXT_PUBLIC_*` variables because they are embedded by Next.js at build/dev-server startup.
+- If AI actions are unavailable, check the corresponding Groq or Gemini key; the deterministic signal and review APIs do not require those AI calls.

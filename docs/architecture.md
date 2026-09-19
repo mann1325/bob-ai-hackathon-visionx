@@ -1,334 +1,142 @@
-# Architecture
+# SignalTrace Architecture
 
-# SignalTrace System Architecture
+SignalTrace is a FastAPI and Next.js decision-support application backed by deterministic FDA FAERS processing and a PostgreSQL-compatible database. AI services explain or inspect evidence; they do not calculate the core signal metrics or make final decisions.
 
-## 1. Complete Architecture
+## End-to-End Data Flow
 
-```text
-══════════════════════════════════════════════
-             PRIMARY SIGNAL ENGINE
-══════════════════════════════════════════════
-
-Official FDA FAERS Quarterly Data
-                │
-                ▼
-      Data Import / Processing
-                │
-                ▼
-     Machine-Geist Foundation
-                │
-                ▼
-       Signal Detection Engine
-                │
-       ┌────────┼─────────┐
-       ▼        ▼         ▼
-      PRR      ROR      Trends
-                │
-                ▼
-       Candidate Signal Store
-
-
-══════════════════════════════════════════════
-            SIGNALTRACE PLATFORM
-══════════════════════════════════════════════
-
-                Candidate Signal
-                       │
-                       ▼
-                Evidence Dashboard
-                       │
-        ┌──────────────┼──────────────┐
-        ▼              ▼              ▼
-   Case Quality   Duplicate Triage   Signal Metrics
-        │              │              │
-        └──────────────┼──────────────┘
-                       ▼
-                Structured Evidence
-                       │
-                       ▼
-                    Groq AI
-                       │
-                       ▼
-              Evidence Explanation
-                       │
-                       ▼
-          Regulatory Rule Engine
-                       │
-                       ▼
-        Potential Documents for Review
-                       │
-                       ▼
-              Gemini Document AI
-                       │
-                       ▼
-            Potential Coverage Gap
-                       │
-                       ▼
-                  HUMAN REVIEW
-
-
-══════════════════════════════════════════════
-          OPTIONAL LIVE / SEARCH LAYER
-══════════════════════════════════════════════
-
-                  User Search
-                       │
-                       ▼
-                   openFDA API
-                       │
-                       ▼
-          Quick / Live Data Exploration
+```mermaid
+flowchart TD
+  A[Official FDA FAERS quarterly ASCII files] --> B[Data pipeline ingestion]
+  B --> C[Case/version normalization]
+  C --> D[Drug-event pair generation]
+  D --> E[Contingency tables and deterministic metrics]
+  E --> F[Candidate signals and signal metrics]
+  F --> G[Database import]
+  G --> H[(PostgreSQL / Neon-compatible database)]
+  H --> I[FastAPI services and /api/v1 routes]
+  I --> J[Next.js Signal Queue]
+  J --> K[Investigation workspace]
+  I --> L[Groq evidence explanation]
+  I --> M[Deterministic regulatory rule engine]
+  I --> N[Gemini document analysis]
+  K --> O[Human review and persisted conclusion]
 ```
 
----
+## Source Data and Dataset Scope
 
-# 2. Primary Signal Engine
+The primary source is official FDA FAERS quarterly data. The current populated application uses **2026Q1** as the imported Neon/PostgreSQL dataset.
 
-## Data Source
+The demonstrated reporting-trend use case also uses historical **2025Q4** data extracted from the official FDA archive. This historical input supports the demonstrated trend calculation; it does not mean that a full 2025Q4 report-level dataset has been imported into `processed_reports`.
 
-The primary source is official FDA FAERS quarterly data.
+The pipeline runner is `src/data_pipeline/run_pipeline.py`. It loads the DEMO, DRUG, REAC, and OUTC FAERS tables, handles case/version policy, generates drug-event pairs, computes metrics, detects candidates, and writes deterministic output artifacts plus a provenance manifest.
 
-```text
-Quarterly Dataset
-       ↓
-ETL / Processing
-       ↓
-Normalized Data
-       ↓
-Drug–Event Pairs
-       ↓
-Signal Calculations
-```
+## Data and ML Layers
 
-The system should support reproducible analysis against a defined dataset release.
+### `src/data_pipeline`
 
----
+- Loads official FAERS ASCII tables.
+- Normalizes report and case data.
+- Applies case-version and deleted-case handling.
+- Generates drug-event pairs.
+- Builds contingency-table statistics.
+- Detects candidate signals.
+- Writes normalized reports, signal metrics, candidate signals, quality reports, and manifests.
 
-## Machine-Geist Foundation (provenance unverified)
+### `src/ml`
 
-Project materials describe Machine-Geist as the starting repository/foundation,
-but the exact repository, version, reused components, and attribution could not
-be verified. The current signal-detection implementation is SignalTrace-owned.
+- Provides trend scoring, risk scoring, ranking, clustering, and enrichment utilities.
+- Imports candidate signal and report-level artifacts through the existing backend SQLAlchemy models.
+- Does not introduce a second database abstraction.
 
-Before modifications:
+The shared trend scorer returns a normalized value in `[-1, 1]` when at least two valid quarterly points exist. Otherwise it returns `None`.
 
-1. Analyze the repository.
-2. Identify the FAERS ingestion pipeline.
-3. Identify signal calculation modules.
-4. Identify reusable data models.
-5. Preserve validated logic where possible.
+## Persistence Layer
 
----
+The backend models in `src/backend/database/models.py` represent the main persisted entities:
 
-# 3. Signal Engine
+- FAERS quarterly metadata
+- Processed report-level data
+- Drug-event pairs
+- Signals
+- Signal metrics
+- Case quality reports
+- Potential duplicate candidates
+- Uploaded documents and document analyses
+- AI summaries
+- Human reviews
 
-The deterministic signal engine is responsible for:
+SQLAlchemy provides access to PostgreSQL-compatible deployments. Alembic migrations manage the production schema. SQLite is used by the automated test fixtures and supported development paths where configured.
 
-- Drug-event pair generation.
-- Contingency-table generation.
-- PRR.
-- ROR where implemented.
-- Supporting report counts.
-- Trend calculations.
-- Candidate signal ranking.
+## FastAPI Backend
 
-Core principle:
+`src/backend/app/main.py` creates the FastAPI application, configures CORS from settings, registers error handlers, and includes the versioned router.
 
-```text
-Historical Data
-       +
-Deterministic Code
-       ↓
-Verifiable Metrics
-       ↓
-Candidate Signal
-```
+The API responsibilities are divided into:
 
-AI does not generate the statistical facts.
+- `api/v1/signals.py`: candidate signals, signal details, metrics, reports, evidence, case quality, duplicates, explanations, and regulatory impact.
+- `api/v1/documents.py`: document upload, extraction metadata, Gemini analysis, and stored analysis retrieval.
+- `api/v1/reviews.py`: human review retrieval and persistence.
+- `api/v1/openfda.py`: optional external drug/event lookups.
+- `api/v1/datasets.py`: dataset release metadata.
+- `services/`: database-backed application logic.
+- `rules/`: deterministic Potential Review Area evaluation.
+- `ai/`: Groq and Gemini API clients.
 
----
-
-# 4. SignalTrace Application Layer
+The primary signal facts and statistical calculations remain backend-owned. The frontend does not recompute PRR, ROR, chi-square, or trend values.
 
 ## Frontend
 
-Recommended:
+`src/frontend` is a Next.js App Router application with React and TypeScript.
+
+The main flow is:
 
 ```text
-Next.js
-React
-TypeScript
+app/page.tsx
+    |
+    +-- Dashboard
+    |     +-- SignalListTable
+    |     +-- LiveSearchWidget
+    |
+    +-- SignalDetail
+          +-- Overview / InvestigationSummary
+          +-- Evidence / EvidenceExplorer
+          +-- Quality / SignalMetricsDetail
+          +-- Regulatory / RegulatoryPanel
+          +-- Documents / DocumentWorkflow
+          +-- AI explanation / AiExplanationPanel
+          +-- Human Review / HumanReviewPanel
 ```
 
-Features:
+The typed `ApiClient` interface has a `RealAdapter` for FastAPI and a `MockAdapter` for isolated development routes. `NEXT_PUBLIC_USE_MOCKS=false` selects the real adapter; otherwise the frontend defaults to mocks.
 
-- Drug search.
-- Signal dashboard.
-- Signal detail page.
-- Evidence visualization.
-- AI investigation panel.
-- Regulatory impact panel.
-- Document upload.
-- Document analysis results.
+The investigation workspace keeps its tab components mounted and toggles visibility. This preserves Evidence Explorer selection, document/AI state, Human Review form state, and loaded component state when users switch sections.
 
----
+## Evidence and Investigation Flow
 
-## Backend
+1. The queue obtains candidate signals from `GET /api/v1/signals`.
+2. The selected signal provides identity and high-level status context.
+3. Overview combines the investigation summary with deterministic signal facts.
+4. Evidence Explorer retrieves supporting processed reports and opens report detail in a drawer/sheet.
+5. Quality retrieves completeness indicators; Duplicate Triage retrieves potential candidates for human triage.
+6. Regulatory Review evaluates deterministic rules and returns Potential Review Areas and rule matches.
+7. Documents are uploaded, text-extracted, analyzed by Gemini, and persisted with a human-review requirement.
+8. Groq receives a structured evidence fact map and returns an advisory explanation.
+9. Human Review stores status, checklist, reviewer notes, and a human-authored conclusion.
 
-Recommended:
+## AI Boundaries
 
-```text
-FastAPI
-Python
-```
+### Groq
 
-Responsibilities:
+The explanation service calls `get_signal_evidence()`, builds an explicit backend fact map, and sends that fact map to Groq. The model can explain why a candidate was flagged, summarize evidence, describe limitations, and suggest questions. It does not produce the PRR, ROR, chi-square, report count, or final decision.
 
-- Serve processed signal data.
-- Manage candidate signals.
-- Run investigation logic.
-- Perform case-quality checks.
-- Perform duplicate triage.
-- Apply regulatory rules.
-- Call Groq.
-- Call Gemini.
-- Optionally call openFDA.
+### Gemini
 
----
+The document service extracts text from PDF, DOCX, or TXT uploads and sends document content plus signal context to Gemini. The returned sections and coverage-gap statements are advisory and persisted with a human-review requirement.
 
-# 5. Database
+## Regulatory Boundaries
 
-Recommended:
+The rule engine evaluates signal facts against deterministic rules and returns Potential Review Areas and explainable rule matches. It does not confirm a deficiency, decide a submission, modify a document, or submit anything to a regulator.
 
-```text
-PostgreSQL
-```
+## Human Review Boundary
 
-Hackathon option:
-
-```text
-Supabase PostgreSQL
-```
-
-Suggested tables:
-
-```text
-faers_quarterly_metadata
-processed_reports
-drug_event_pairs
-signals
-signal_metrics
-case_quality
-duplicate_candidates
-regulatory_rules
-document_uploads
-document_analysis
-ai_summaries
-```
-
----
-
-# 6. Optional openFDA Layer
-
-openFDA is intentionally separated from the primary signal engine.
-
-```text
-Frontend Search
-       ↓
-Backend
-       ↓
-openFDA API
-       ↓
-Quick / Live Lookup
-```
-
-Possible uses:
-
-- Drug search.
-- Quick exploration.
-- Demonstration of live API integration.
-- Additional recent information.
-
-The primary PRR/ROR pipeline should not depend on openFDA availability.
-
----
-
-# 7. Groq Layer
-
-Input:
-
-```text
-Structured Signal Facts
-```
-
-Output:
-
-```text
-Evidence Explanation
-Investigation Summary
-Limitations
-Suggested Questions
-```
-
----
-
-# 8. Regulatory Rule Engine
-
-```text
-Candidate Signal
-       ↓
-Signal Characteristics
-       ↓
-Deterministic Rules
-       ↓
-Potential Review Areas
-       ↓
-Explainable Result
-```
-
-Rules remain separate from AI prompts.
-
----
-
-# 9. Gemini Document Intelligence
-
-```text
-Document Upload
-       +
-Candidate Signal Context
-       ↓
-Document Processing
-       ↓
-Gemini Analysis
-       ↓
-Relevant Sections
-Existing Coverage
-Potential Gap
-       ↓
-Human Review
-```
-
----
-
-# 10. IBM Bob Development Architecture
-
-IBM Bob exists on the development side only.
-
-```text
-OUR DEVELOPMENT TEAM
-         │
-         ▼
-      IBM BOB
-         │
-   ┌─────┼─────┐
-   ▼     ▼     ▼
- Ask    Plan  Agent
-   │     │     │
-   └─────┼─────┘
-         ▼
-      Testing
-         ▼
-      Review
-         ▼
-    SignalTrace
-```
+The reviewer controls status, checklist completion, notes, and conclusion. The system requires professional review for candidate signals, AI explanations, potential duplicate candidates, regulatory mappings, and document coverage gaps.

@@ -53,7 +53,7 @@ export function DocumentWorkflow({ apiClient, signalId }: DocumentWorkflowProps)
 
       {!isUploading && !analysis && (
         <label className={styles.uploadZone}>
-          <h3 className={styles.uploadTitle}>Click or drag document to begin Gemini analysis</h3>
+          <h3 className={styles.uploadTitle}>Upload a regulatory document to analyze its relevant sections.</h3>
           <p className={styles.uploadSpecs}>
             Supported: PDF, DOCX, TXT (Max 10MB)
           </p>
@@ -112,8 +112,8 @@ export function DocumentWorkflow({ apiClient, signalId }: DocumentWorkflowProps)
 
           <div className={styles.actionFooter}>
              <span className={styles.auditStamp}>21 CFR PART 11 COMPLIANT AUDIT IMMUTABLE • TIMESTAMP: {new Date().toISOString()}</span>
-             <button className={styles.commitBtn} type="button" disabled title="Pending human review">
-              Affirm & Append to Regulatory Dossier — Pending Review
+             <button className={styles.commitBtn} type="button" disabled title="Dossier append is not available in this version">
+              Dossier append — Not available in this version
              </button>
           </div>
         </div>

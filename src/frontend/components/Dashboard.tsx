@@ -15,7 +15,7 @@ export function Dashboard({ onSelectSignal }: DashboardProps) {
   return (
     <div className={styles.dashboardContainer}>
       <header className={styles.header}>
-        <div className={styles.brand}>SignalTrace Global Command</div>
+        <div><div className={styles.brand}>SignalTrace</div><div className={styles.headerContext}>Pharmacovigilance workspace</div></div>
         
         <div className={styles.widgetWrapper}>
           <LiveSearchWidget apiClient={apiClient} />

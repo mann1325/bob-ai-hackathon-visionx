@@ -1,144 +1,19 @@
-.detailContainer {
-  background: var(--background);
-  min-height: 100vh;
-  color: var(--foreground);
-}
-
-.header {
-  padding: 2rem 4rem;
-  margin-bottom: 2rem;
-  background: var(--navy);
-  box-shadow: 0 4px 20px rgba(0, 19, 108, 0.15);
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  border-bottom: 8px solid var(--royal-blue);
-}
-
-.backBtn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #FFFFFF;
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--border-radius-pill);
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.backBtn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateX(-4px);
-}
-
-.titleSection {
-  display: flex;
-  flex-direction: column;
-}
-
-.drugName {
-  font-size: 2rem;
-  margin: 0;
-  font-weight: 800;
-  color: #FFFFFF;
-  line-height: 1.1;
-}
-
-.eventName {
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 0.95rem;
-  margin-top: 0.25rem;
-  font-family: 'Inter', sans-serif;
-  font-weight: 500;
-}
-
-.statusBadge {
-  background: var(--pastel-yellow);
-  color: var(--navy-dark);
-  padding: 0.5rem 1rem;
-  border-radius: var(--border-radius-pill);
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  font-weight: 800;
-  margin-left: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.statusBadge.unscored {
-  background: var(--background-alt);
-  color: var(--text-muted);
-}
-
-/* Base grid structure */
-.gridLayout {
-  padding: 0 4rem 4rem;
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 3rem;
-  max-width: 1600px;
-  margin: 0 auto;
-}
-
-.leftColumn, .rightColumn {
-  display: flex;
-  flex-direction: column;
-}
-
-.spacer {
-  height: 2.5rem;
-}
-
-@media (max-width: 1024px) {
-  .header {
-    padding: 1.5rem 2rem;
-    gap: 1.5rem;
-  }
-
-  .drugName {
-    font-size: 1.5rem;
-  }
-
-  .gridLayout {
-    grid-template-columns: 1fr;
-    padding: 0 2rem 2rem;
-    gap: 2rem;
-  }
-
-  .spacer {
-    height: 2rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .header {
-    padding: 1rem 1.5rem;
-    gap: 1rem;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .drugName {
-    font-size: 1.25rem;
-  }
-
-  .titleSection {
-    width: 100%;
-  }
-
-  .statusBadge {
-    margin-left: 0;
-    width: 100%;
-    text-align: center;
-  }
-
-  .gridLayout {
-    padding: 0 1.5rem 1.5rem;
-    gap: 1.5rem;
-  }
-
-  .spacer {
-    height: 1.5rem;
-  }
-}
+.detailContainer { min-height: 100vh; background: var(--background); color: var(--foreground); }
+.header { position: sticky; top: 0; z-index: 10; padding: .75rem max(1rem, calc((100% - 1240px) / 2)); background: var(--navy); border-bottom: 8px solid var(--royal-blue); box-shadow: 0 4px 20px rgba(0, 19, 108, 0.15); }
+.headerTop, .signalIdentity, .contextMeta, .sectionHeader { display: flex; align-items: center; }
+.headerTop { justify-content: space-between; gap: 1rem; }
+.backBtn { padding: .45rem .65rem; border: 1px solid rgba(255, 255, 255, .3); border-radius: var(--border-radius-control); background: rgba(255, 255, 255, .1); color: #FFFFFF; cursor: pointer; font-size: .8rem; font-weight: 600; }
+.contextLabel { color: rgba(255, 255, 255, .72); font-size: .75rem; }.sectionHint { color: var(--text-muted); font-size: .75rem; }
+.signalIdentity { justify-content: space-between; gap: 1rem; margin-top: .75rem; }
+.signalIdentity h1 { margin: 0; color: #FFFFFF; font-size: 1.55rem; line-height: 1.2; }.signalIdentity p { margin: .25rem 0 0; color: rgba(255, 255, 255, .75); font-size: .9rem; }
+.priorityBadge { display: inline-flex; padding: .35rem .65rem; border-radius: 999px; font-size: .72rem; font-weight: 700; text-transform: capitalize; }
+.priorityBadge.critical { background: var(--danger-bg); color: var(--critical); }.priorityBadge.high { background: #fff4e5; color: var(--high); }.priorityBadge.medium { background: #edf5ff; color: var(--medium); }.priorityBadge.low, .priorityBadge.unscored { background: var(--background-alt); color: var(--low); }
+.contextMeta { flex-wrap: wrap; gap: .65rem 1.75rem; margin: .75rem 0 0; }
+.contextMeta div { display: flex; flex-direction: column; gap: .15rem; min-width: 6rem; }
+.contextMeta dt { color: rgba(255, 255, 255, .65); font-size: .68rem; text-transform: uppercase; letter-spacing: .04em; }.contextMeta dd { margin: 0; color: #FFFFFF; font-family: 'Inter', sans-serif; font-size: .78rem; font-variant-numeric: tabular-nums; }
+.tabs { display: flex; gap: .15rem; overflow-x: auto; padding: 0 max(1rem, calc((100% - 1240px) / 2)); background: var(--surface); border-bottom: 1px solid var(--border); scrollbar-width: thin; }
+.tabs button { flex: 0 0 auto; padding: .65rem .7rem .6rem; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--text-muted); cursor: pointer; font-size: .78rem; font-weight: 600; white-space: nowrap; }.tabs button:hover { color: var(--navy); }.tabs .activeTab { border-bottom-color: var(--royal-blue); color: var(--royal-blue); }
+.content { width: min(1280px, 100%); margin: 0 auto; padding: 1.5rem 1rem 2rem; }
+.section { min-width: 0; }.sectionHeader { justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1rem; }.eyebrow { margin: 0 0 .3rem; color: var(--royal-blue); font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }.sectionHeader h2 { margin: 0; color: var(--navy); font-size: 1.25rem; }.sectionHint { padding-bottom: .1rem; }.advisory { padding: .35rem .6rem; background: var(--warning-bg); border: 1px solid #f4d2a7; border-radius: var(--border-radius-control); color: var(--high); font-size: .7rem; font-weight: 600; }
+.aiSecondary { margin-top: 1.5rem; }
+@media (max-width: 600px) { .header { padding: .85rem 1rem 1rem; }.signalIdentity { align-items: flex-start; flex-direction: column; }.signalIdentity h1 { font-size: 1.3rem; }.contextMeta { gap: .8rem 1rem; }.contextMeta div { min-width: calc(50% - .5rem); }.sectionHeader { align-items: flex-start; flex-direction: column; }.content { padding: 1.25rem 1rem 1.5rem; } }

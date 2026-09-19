@@ -1,0 +1,39 @@
+.summary {
+  padding: 1.25rem 1.5rem;
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 19, 108, 0.08);
+  border-radius: var(--border-radius-card);
+  box-shadow: var(--shadow-diffuse);
+}
+
+.header { margin-bottom: 1rem; }
+.header h2 { margin: 0; color: var(--navy); font-size: 1.1rem; }
+.header p, .state { margin: 0.3rem 0 0; color: var(--text-muted); font-size: 0.78rem; }
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.6rem; }
+.grid div { min-width: 0; padding: 0.7rem 0.8rem; background: var(--background-alt); border: 1px solid rgba(0, 19, 108, 0.05); border-radius: 6px; }
+.grid span, .reason > span, .sources > span { display: block; color: var(--text-muted); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.grid strong { display: block; margin-top: 0.25rem; color: var(--navy); font-size: 0.82rem; overflow-wrap: anywhere; }
+.reason { margin-top: 0.8rem; padding: 0.8rem 0.9rem; border-left: 3px solid var(--royal-blue); background: var(--background-alt); }
+.reason p { margin: 0.35rem 0 0; color: var(--navy); font-size: 0.82rem; line-height: 1.45; }
+.sources { display: flex; justify-content: space-between; gap: 1rem; margin-top: 0.8rem; }
+.sources strong { color: var(--navy); font-size: 0.78rem; text-align: right; }
+.provenance { display: flex; flex-wrap: wrap; gap: 0.25rem 0.6rem; margin-top: 0.7rem; color: var(--text-muted); font-size: 0.72rem; }
+.provenance strong { color: var(--navy); }
+.briefGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; margin-top: 0.8rem; }
+.briefGrid details { padding: 0.7rem 0.8rem; background: var(--background-alt); border: 1px solid rgba(0, 19, 108, 0.05); border-radius: 6px; }
+.briefGrid summary { cursor: pointer; color: var(--navy); font-size: 0.76rem; font-weight: 700; }
+.briefGrid p, .briefGrid li { margin: 0.45rem 0 0; color: var(--navy); font-size: 0.75rem; line-height: 1.4; }
+.briefGrid ul { margin: 0; padding-left: 1.1rem; }
+.briefGrid a { color: var(--royal-blue); font-weight: 700; }
+.disclaimer { margin: 0.8rem 0 0; color: #92400E; font-size: 0.73rem; font-weight: 600; }
+.error { padding: 0.75rem 0.9rem; background: #FEF2F2; border-radius: 6px; color: #B91C1C; font-size: 0.8rem; }
+
+@media (max-width: 700px) {
+  .grid, .briefGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sources { align-items: flex-start; flex-direction: column; }
+  .sources strong { text-align: left; }
+}
+
+@media (max-width: 460px) {
+  .grid, .briefGrid { grid-template-columns: 1fr; }
+}

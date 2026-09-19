@@ -42,7 +42,7 @@ export function LiveSearchWidget({ apiClient }: LiveSearchWidgetProps) {
       <header className={styles.header}>
         <div className={styles.trackerPill}>
           <div className={`${styles.statusDot} ${isDegraded ? styles.degraded : ''}`} />
-          External DB: openFDA
+          Search FDA labels
         </div>
         <div className={styles.controls}>
           <button onClick={() => setIsCollapsed(!isCollapsed)} className={styles.iconBtn} aria-label="Toggle Collapse">
@@ -70,7 +70,7 @@ export function LiveSearchWidget({ apiClient }: LiveSearchWidgetProps) {
                 <svg className={styles.spinner} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
                 </svg>
-              ) : 'SEC'}
+              ) : 'Search'}
             </button>
           </form>
 
@@ -99,7 +99,7 @@ export function LiveSearchWidget({ apiClient }: LiveSearchWidgetProps) {
         </div>
       ) : (
         <div className={styles.collapsedState}>
-          Widget Collapsed
+          Search utility collapsed
         </div>
       )}
     </div>

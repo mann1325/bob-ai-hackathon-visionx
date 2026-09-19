@@ -39,7 +39,13 @@ def test_normalized_report_schema_fields(test_config):
             "source": "FDA_FAERS",
         }
     )
-    records = build_normalized_reports(pairs, cases, test_config)
+    outc = pd.DataFrame(
+        {
+            "primaryid": ["R001", "R002", "R003"],
+            "outc_cod": ["DE", "ZZ", "HO"],
+        }
+    )
+    records = build_normalized_reports(pairs, cases, outc, test_config)
     schema = _load_schema(test_config.schema_path("normalized_report"))
     import jsonschema
     for rec in records:
@@ -49,6 +55,52 @@ def test_normalized_report_schema_fields(test_config):
     assert sorted(r001["reactions"]) == ["BLEEDING", "GASTROINTESTINAL BLEEDING"]
     assert r001["source"] == "FDA_FAERS"
     assert r001["report_quarter"] == "2026Q1"
+    assert r001["seriousness"] == "Serious"
+    assert r001["seriousness_codes"] == ["DE"]
+
+
+@pytest.mark.parametrize("code", ["DE", "LT", "HO", "DS", "CA", "RI", "OT"])
+def test_seriousness_for_each_faers_serious_outcome_code(test_config, code):
+    pairs = pd.DataFrame(
+        {
+            "primaryid": ["R001"],
+            "caseid": ["C001"],
+            "drug_name": ["ASPIRIN"],
+            "event_name": ["BLEEDING"],
+        }
+    )
+    cases = pd.DataFrame({"primaryid": ["R001"], "patient_age": [None], "patient_sex": [None], "event_date": [None]})
+    outc = pd.DataFrame({"primaryid": ["R001"], "outc_cod": [code]})
+
+    record = build_normalized_reports(pairs, cases, outc, test_config)[0]
+
+    assert record["seriousness"] == "Serious"
+    assert record["seriousness_codes"] == [code]
+
+
+def test_seriousness_multiple_non_serious_and_missing_outcomes(test_config):
+    pairs = pd.DataFrame(
+        {
+            "primaryid": ["R001", "R002", "R003"],
+            "caseid": ["C001", "C002", "C003"],
+            "drug_name": ["ASPIRIN", "WARFARIN", "METFORMIN"],
+            "event_name": ["BLEEDING", "HAEMORRHAGE", "NAUSEA"],
+        }
+    )
+    cases = pd.DataFrame({"primaryid": ["R001", "R002", "R003"], "patient_age": [None] * 3, "patient_sex": [None] * 3, "event_date": [None] * 3})
+    outc = pd.DataFrame(
+        {"primaryid": ["R001", "R001", "R002"], "outc_cod": ["DE", "HO", "ZZ"]}
+    )
+
+    records = build_normalized_reports(pairs, cases, outc, test_config)
+    by_id = {record["report_id"]: record for record in records}
+
+    assert by_id["R001"]["seriousness"] == "Serious"
+    assert by_id["R001"]["seriousness_codes"] == ["DE", "HO"]
+    assert by_id["R002"]["seriousness"] == "Non-serious"
+    assert by_id["R002"]["seriousness_codes"] == []
+    assert by_id["R003"]["seriousness"] == "Unknown"
+    assert by_id["R003"]["seriousness_codes"] == []
 
 
 def test_candidate_signal_schema_fields(test_config):

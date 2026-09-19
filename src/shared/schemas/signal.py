@@ -34,8 +34,17 @@ class NormalizedReport(BaseModel):
     patient_age: Optional[float] = None
     patient_sex: Optional[str] = None
     event_date: Optional[str] = None
+    seriousness: Literal["Serious", "Non-serious", "Unknown"] = "Unknown"
+    seriousness_codes: List[str] = Field(default_factory=list)
     report_quarter: str
     source: str = "FDA_FAERS"
+
+
+class SupportingReportList(BaseModel):
+    reports: List[NormalizedReport] = Field(default_factory=list)
+    total: int = Field(default=0, ge=0)
+    page: int = Field(default=1, ge=1)
+    page_size: int = Field(default=50, ge=1)
 
 
 class SignalSummary(BaseModel):

@@ -1,0 +1,31 @@
+.panel {
+  padding: 1.5rem;
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 19, 108, 0.08);
+  border-radius: var(--border-radius-card);
+  box-shadow: var(--shadow-diffuse);
+}
+
+.header { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; margin-bottom: 1.25rem; }
+.header h2 { margin: 0; color: var(--navy); font-size: 1.15rem; }
+.header p, .header time { margin: 0.35rem 0 0; color: var(--text-muted); font-size: 0.78rem; line-height: 1.45; }
+.fieldLabel { display: block; margin: 1rem 0 0.4rem; color: var(--navy); font-size: 0.78rem; font-weight: 800; }
+.progressSummary { display: flex; flex-direction: column; gap: .25rem; padding: .8rem .9rem; background: var(--background-alt); border: 1px solid var(--border); border-radius: 6px; color: var(--navy); font-size: .82rem; }
+.progressSummary span { color: var(--text-muted); font-size: .75rem; }
+.fieldLabel span { color: var(--text-muted); font-weight: 500; }
+.select, .textarea { width: 100%; box-sizing: border-box; padding: 0.7rem 0.8rem; background: var(--background-alt); border: 1px solid #CBD5E1; border-radius: 6px; color: var(--navy); font: inherit; }
+.textarea { resize: vertical; line-height: 1.45; }
+.checklist { display: grid; gap: 0.6rem; margin: 1.25rem 0 0; padding: 1rem; border: 1px solid rgba(0, 19, 108, 0.1); border-radius: 8px; }
+.checklist legend { padding: 0 0.35rem; color: var(--navy); font-size: 0.8rem; font-weight: 800; }
+.checkboxRow { display: flex; align-items: center; gap: 0.6rem; color: var(--navy); font-size: 0.85rem; }
+.checkboxRow input { width: 1rem; height: 1rem; accent-color: var(--royal-blue); }
+.saveButton { margin-top: 1.25rem; padding: 0.7rem 1rem; background: var(--royal-blue); border: 0; border-radius: 6px; color: #FFFFFF; cursor: pointer; font-weight: 800; }
+.saveButton:disabled { cursor: wait; opacity: 0.65; }
+.state { color: var(--text-muted); font-size: 0.85rem; }
+.error, .success { margin-top: 1rem; padding: 0.75rem 0.9rem; border-radius: 6px; font-size: 0.8rem; }
+.error { background: #FEF2F2; color: #B91C1C; }
+.success { background: #ECFDF5; color: #047857; }
+
+@media (max-width: 600px) {
+  .header { flex-direction: column; }
+}

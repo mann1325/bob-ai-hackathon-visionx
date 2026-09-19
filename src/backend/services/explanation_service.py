@@ -22,6 +22,54 @@ logger = logging.getLogger(__name__)
 _DUPLICATE_RATIONALE_SAMPLE_SIZE = 3
 
 
+def build_explanation_facts(evidence: Any) -> Dict[str, Any]:
+    """Convert the evidence bundle into an explicit, model-facing fact map."""
+    metrics = evidence.metrics
+    quality = evidence.case_quality
+    return {
+        "signal_id": evidence.signal_id,
+        "drug_name": evidence.drug_name,
+        "event_name": evidence.event_name,
+        "candidate_status": evidence.candidate_status,
+        "priority_level": evidence.priority_level,
+        "risk_score": evidence.risk_score,
+        "dataset_version": evidence.dataset_version,
+        "report_count": metrics.get("report_count"),
+        "prr": metrics.get("prr"),
+        "ror": metrics.get("ror"),
+        "chi_square": metrics.get("chi_square"),
+        "contingency_table": metrics.get("contingency_table"),
+        "trend_score": metrics.get("trend_score"),
+        "trend_data": metrics.get("trend_data"),
+        "case_quality": {
+            "quality_score": quality.quality_score,
+            "total_reports": quality.total_reports,
+            "missing_age_count": quality.missing_age_count,
+            "missing_sex_count": quality.missing_sex_count,
+            "missing_date_count": quality.missing_date_count,
+            "quality_flags": quality.quality_flags,
+            "indicators": [indicator.model_dump() for indicator in quality.indicators],
+        } if quality else None,
+        "duplicate_count": len(evidence.potential_duplicates),
+        "duplicate_sample": [
+            {
+                "candidate_id": duplicate.candidate_id,
+                "report_id_a": duplicate.report_id_a,
+                "report_id_b": duplicate.report_id_b,
+                "status": duplicate.status,
+                "similarity_score": duplicate.similarity_score,
+                "matched_fields": duplicate.matched_fields,
+                "date_proximity_days": duplicate.date_proximity_days,
+                "rationale": duplicate.rationale,
+            }
+            for duplicate in evidence.potential_duplicates[:_DUPLICATE_RATIONALE_SAMPLE_SIZE]
+        ],
+        "known_limitations": evidence.known_limitations,
+        "regulatory_review_areas": evidence.regulatory_review_areas,
+        "regulatory_rule_matches": evidence.regulatory_rule_matches,
+    }
+
+
 def generate_signal_explanation(
     db: Session,
     signal_id: str,
@@ -41,28 +89,8 @@ def generate_signal_explanation(
             detail="GROQ_API_KEY is not configured. Groq AI evidence explanation is currently unavailable.",
         )
 
-    # Collect backend-computed structured facts ONLY (no raw FAERS rows)
-    facts: Dict[str, Any] = {
-        "drug_name": evidence.drug_name,
-        "event_name": evidence.event_name,
-        "report_count": evidence.metrics.get("report_count", 0),
-        "prr": evidence.metrics.get("prr", "N/A"),
-        "ror": evidence.metrics.get("ror", "N/A"),
-        "trend_score": evidence.metrics.get("trend_score", "N/A"),
-        "quality_score": (
-            evidence.case_quality.quality_score if evidence.case_quality else "N/A"
-        ),
-        "quality_flags": (
-            evidence.case_quality.quality_flags if evidence.case_quality else []
-        ),
-        "duplicate_count": len(evidence.potential_duplicates),
-        "duplicate_rationale_sample": [
-            d.rationale
-            for d in evidence.potential_duplicates[:_DUPLICATE_RATIONALE_SAMPLE_SIZE]
-            if d.rationale
-        ],
-        "known_limitations": evidence.known_limitations,
-    }
+    # Collect backend-computed structured facts ONLY (no raw FAERS rows).
+    facts = build_explanation_facts(evidence)
 
     try:
         explanation_data = client.generate_explanation(facts)

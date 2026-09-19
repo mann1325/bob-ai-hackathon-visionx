@@ -63,7 +63,8 @@ export function RegulatoryPanel({ apiClient = defaultApiClient, signalId = 'SIG-
                   const id = reviewAreaKey(area, index);
                   const isExpanded = expandedId === id;
                   return (
-                    <div
+                    <button
+                      type="button"
                       key={id}
                       className={`${styles.itemRow} ${styles.reviewRow} ${isExpanded ? styles.expanded : ''}`}
                       onClick={() => toggleExpand(id)}
@@ -86,7 +87,7 @@ export function RegulatoryPanel({ apiClient = defaultApiClient, signalId = 'SIG-
                           </div>
                         )}
                       </div>
-                    </div>
+                    </button>
                   );
                 })
               )}

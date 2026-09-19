@@ -27,7 +27,7 @@
 .iconBtn {
   background: #FFFFFF;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  color: var(--navy);
+  color: #FFFFFF;
   width: 24px;
   height: 24px;
   display: flex;
@@ -201,7 +201,7 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  color: #FFFFFF;
+  color: var(--navy);
 }
 
 .collapsedState {

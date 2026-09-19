@@ -37,6 +37,8 @@ class ProcessedReportModel(Base, TimestampMixin):
     patient_age: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     patient_sex: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     event_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    seriousness: Mapped[str] = mapped_column(String(20), nullable=False, default="Unknown")
+    seriousness_codes: Mapped[List[str]] = mapped_column(JSON, nullable=False, default=list)
     report_quarter: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     source: Mapped[str] = mapped_column(String(50), nullable=False, default="FDA_FAERS")
 
@@ -73,6 +75,23 @@ class SignalModel(Base, TimestampMixin):
     known_limitations: Mapped[Optional[List[str]]] = mapped_column(
         JSON, nullable=True, default=list
     )
+
+
+class SignalReviewModel(Base, TimestampMixin):
+    __tablename__ = "signal_reviews"
+
+    review_id: Mapped[str] = mapped_column(String(50), primary_key=True)
+    signal_id: Mapped[str] = mapped_column(
+        String(50), ForeignKey("signals.signal_id"), nullable=False, unique=True, index=True
+    )
+    review_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="not_started"
+    )
+    evidence_checklist: Mapped[Dict[str, bool]] = mapped_column(
+        JSON, nullable=False, default=dict
+    )
+    reviewer_notes: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    reviewer_conclusion: Mapped[str] = mapped_column(Text, nullable=False, default="")
 
 
 class SignalMetricsModel(Base, TimestampMixin):

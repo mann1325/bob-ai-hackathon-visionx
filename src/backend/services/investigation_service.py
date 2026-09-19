@@ -1,7 +1,8 @@
 import hashlib
 from itertools import combinations
 from typing import Dict, List, Optional, Tuple
-from sqlalchemy import func, select
+from sqlalchemy import cast, func, select
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Session
 
 from database.models import (
@@ -137,11 +138,31 @@ def get_case_quality_for_signal(
             ],
         )
 
-    # Compute on read from processed reports if table is not pre-populated
-    report_stmt = select(ProcessedReportModel).where(
-        func.upper(ProcessedReportModel.drug_name) == sig.drug_name.upper()
-    )
-    reports = db.scalars(report_stmt).all()
+    # Compute on read from the same drug/event/quarter scope as supporting reports.
+    report_filters = [ProcessedReportModel.drug_name == sig.drug_name]
+    if sig.dataset_version:
+        report_filters.append(ProcessedReportModel.report_quarter == sig.dataset_version)
+
+    if db.get_bind().dialect.name == "postgresql":
+        report_filters.append(
+            cast(ProcessedReportModel.reactions, JSONB).contains([sig.event_name.upper()])
+        )
+        reports = db.scalars(
+            select(ProcessedReportModel).where(*report_filters)
+        ).all()
+    else:
+        # SQLite is used by the existing test suite and has no JSONB containment operator.
+        candidates = db.scalars(select(ProcessedReportModel).where(*report_filters)).all()
+        event_name = sig.event_name.upper()
+        reports = [
+            report
+            for report in candidates
+            if isinstance(report.reactions, list)
+            and any(
+                isinstance(reaction, str) and reaction.upper() == event_name
+                for reaction in report.reactions
+            )
+        ]
     total = len(reports) if reports else sig.supporting_report_count
 
     if total == 0:

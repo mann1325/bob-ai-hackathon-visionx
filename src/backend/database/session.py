@@ -1,11 +1,14 @@
 import logging
 from typing import Generator, Optional
+
 from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
+import database.models  # noqa: F401 - register all ORM models before schema creation
 from app.config import get_settings, normalize_database_url
+from database.base import Base
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +38,12 @@ def get_engine() -> Optional[Engine]:
         _engine = create_engine(
             db_url,
             pool_pre_ping=True,
+            pool_recycle=1800,
             connect_args=connect_args,
         )
+        if db_url.startswith("sqlite"):
+            Base.metadata.create_all(bind=_engine)
+            logger.info("SQLite schema initialized for local development.")
         logger.info("SQLAlchemy engine initialized.")
     except Exception as exc:
         logger.error("Failed to initialize database engine: %s", exc)

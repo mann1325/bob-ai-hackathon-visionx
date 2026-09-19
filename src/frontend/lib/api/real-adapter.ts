@@ -1,9 +1,13 @@
 import { ApiClient } from './client';
-import { SignalDetail, SignalListParams, SignalListResponse, DocumentAnalysis, DocumentUpload, GroqExplanation, CaseQualityReport, DuplicateCandidate, LiveSearchResponse, RegulatoryImpact } from './types';
+import { SignalDetail, SignalListParams, SignalListResponse, DocumentAnalysis, DocumentUpload, GroqExplanation, CaseQualityReport, DuplicateCandidate, LiveSearchResponse, RegulatoryImpact, ProcessedReport, SupportingReportList, HumanReview, HumanReviewUpdate, InvestigationSummary } from './types';
 
-// The actual backend URL would be configured in environment variables
-const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://signaltrace-backend.onrender.com';
-const normalizedApiUrl = configuredApiUrl.replace(/\/+$/, '');
+// Keep local browser requests on IPv4 because the backend is bound to 127.0.0.1.
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+const parsedApiUrl = new URL(configuredApiUrl);
+if (parsedApiUrl.hostname === 'localhost') {
+  parsedApiUrl.hostname = '127.0.0.1';
+}
+const normalizedApiUrl = parsedApiUrl.toString().replace(/\/+$/, '');
 const API_BASE_URL = normalizedApiUrl.endsWith('/api/v1')
   ? normalizedApiUrl
   : `${normalizedApiUrl}/api/v1`;
@@ -43,6 +47,30 @@ export class RealAdapter implements ApiClient {
 
   async getSignal(signalId: string): Promise<SignalDetail | null> {
     return this.fetchAs<SignalDetail>(`/signals/${signalId}`);
+  }
+
+  async getInvestigationSummary(signalId: string): Promise<InvestigationSummary> {
+    return this.fetchAs<InvestigationSummary>(`/signals/${signalId}/investigation-summary`);
+  }
+
+  async getReview(signalId: string): Promise<HumanReview> {
+    return this.fetchAs<HumanReview>(`/signals/${signalId}/review`);
+  }
+
+  async saveReview(signalId: string, review: HumanReviewUpdate): Promise<HumanReview> {
+    return this.fetchAs<HumanReview>(`/signals/${signalId}/review`, {
+      method: 'PUT',
+      body: JSON.stringify(review),
+    });
+  }
+
+  async listSupportingReports(signalId: string, page = 1, pageSize = 10): Promise<SupportingReportList> {
+    const query = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+    return this.fetchAs<SupportingReportList>(`/signals/${signalId}/reports?${query.toString()}`);
+  }
+
+  async getReport(reportId: string): Promise<ProcessedReport> {
+    return this.fetchAs<ProcessedReport>(`/reports/${reportId}`);
   }
 
   async requestExplanation(signalId: string): Promise<GroqExplanation> {

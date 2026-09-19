@@ -37,6 +37,83 @@ export interface SignalDetail extends Signal {
   disclaimer?: string;
 }
 
+export type ReviewStatus = 'not_started' | 'in_review' | 'reviewed';
+
+export interface EvidenceChecklist {
+  supporting_reports_reviewed: boolean;
+  case_quality_reviewed: boolean;
+  reporting_trend_reviewed: boolean;
+  duplicates_reviewed: boolean;
+  ai_explanation_reviewed: boolean;
+  regulatory_documents_reviewed: boolean;
+}
+
+export interface HumanReview {
+  review_id: string | null;
+  signal_id: string;
+  review_status: ReviewStatus;
+  evidence_checklist: EvidenceChecklist;
+  reviewer_notes: string;
+  reviewer_conclusion: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export type HumanReviewUpdate = Omit<HumanReview, 'review_id' | 'signal_id' | 'created_at' | 'updated_at'>;
+
+export interface InvestigationSummary {
+  signal_id: string;
+  drug_name: string;
+  event_name: string;
+  dataset_version: string | null;
+  candidate_status: string;
+  priority_level: string | null;
+  supporting_report_count: number;
+  prr: number;
+  ror: number | null;
+  chi_square: number | null;
+  trend_score: number | null;
+  trend_data: Array<Record<string, unknown>> | null;
+  why_flagged: string;
+  known_limitations: string[];
+  case_quality: CaseQualityReport | null;
+  duplicate_count: number;
+  duplicates: Array<Pick<DuplicateCandidate, 'candidate_id' | 'report_id_a' | 'report_id_b' | 'status' | 'similarity_score' | 'matched_fields' | 'human_review_required'>>;
+  ai_explanation: (Partial<GroqExplanation> & { advisory: boolean }) | null;
+  regulatory_review_areas: ReviewArea[];
+  regulatory_rule_matches: RuleMatch[];
+  documents: Array<{
+    document_id: string;
+    filename: string;
+    analysis_status: string | null;
+    relevant_section_count: number;
+    potential_coverage_gap: string | null;
+    human_review_required: boolean;
+  }>;
+  human_review: HumanReview | null;
+  human_review_required: boolean;
+}
+
+export interface ProcessedReport {
+  report_id: string;
+  drug_name: string;
+  reactions: string[];
+  patient_age: number | null;
+  patient_sex: string | null;
+  event_date: string | null;
+  seriousness: 'Serious' | 'Non-serious' | 'Unknown';
+  seriousness_codes: string[];
+  report_quarter: string;
+  source: string;
+}
+
+export interface SupportingReportList {
+  reports: ProcessedReport[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
 export interface SignalListParams {
   drug?: string;
   event?: string;

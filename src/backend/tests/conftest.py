@@ -159,14 +159,48 @@ def db_session(test_engine):
         )
     )
 
-    # Seed processed report for search fallback
-    session.add(
-        ProcessedReportModel(
-            report_id="rep-999",
-            drug_name="LISINOPRIL",
-            reactions=["COUGH"],
-            report_quarter="2024Q1",
-        )
+    # Seed processed reports for report retrieval and signal scoping tests.
+    session.add_all(
+        [
+            ProcessedReportModel(
+                report_id="rep-001",
+                drug_name="ASPIRIN",
+                reactions=["GASTROINTESTINAL BLEEDING", "NAUSEA"],
+                patient_age=62,
+                patient_sex="M",
+                event_date="2024-01-15",
+                seriousness="Serious",
+                seriousness_codes=["DE", "HO"],
+                report_quarter="2024Q1",
+                source="FDA_FAERS",
+            ),
+            ProcessedReportModel(
+                report_id="rep-002",
+                drug_name="ASPIRIN",
+                reactions=["GASTROINTESTINAL BLEEDING"],
+                seriousness="Unknown",
+                seriousness_codes=[],
+                report_quarter="2024Q1",
+            ),
+            ProcessedReportModel(
+                report_id="rep-003",
+                drug_name="ASPIRIN",
+                reactions=["HEADACHE"],
+                report_quarter="2024Q1",
+            ),
+            ProcessedReportModel(
+                report_id="rep-004",
+                drug_name="WARFARIN",
+                reactions=["HAEMORRHAGE"],
+                report_quarter="2024Q1",
+            ),
+            ProcessedReportModel(
+                report_id="rep-999",
+                drug_name="LISINOPRIL",
+                reactions=["COUGH"],
+                report_quarter="2024Q1",
+            ),
+        ]
     )
 
     session.flush()

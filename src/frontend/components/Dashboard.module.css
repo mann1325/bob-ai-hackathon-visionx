@@ -5,7 +5,7 @@
 }
 
 .header {
-  padding: 2rem 4rem;
+  padding: 1rem clamp(1rem, 4vw, 3rem);
   background: var(--navy);
   display: flex;
   justify-content: space-between;
@@ -20,13 +20,12 @@
 }
 
 .brand {
-  font-family: 'Outfit', sans-serif;
-  font-size: 2rem;
-  font-weight: 800;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: #FFFFFF;
-  letter-spacing: -0.04em;
   flex-shrink: 0;
 }
+.headerContext { margin-top: .15rem; color: rgba(255, 255, 255, .72); font-size: .75rem; }
 
 .widgetWrapper {
   flex: 1;
@@ -36,7 +35,7 @@
 }
 
 .mainContent {
-  padding: 4rem;
+  padding: 2rem clamp(1rem, 4vw, 3rem);
   max-width: 1400px;
   margin: 0 auto;
   position: relative;
@@ -48,12 +47,12 @@
   border-radius: var(--border-radius-card);
   box-shadow: var(--shadow-diffuse);
   overflow: hidden;
-  border: 1px solid rgba(0, 19, 108, 0.04);
+  border: 1px solid var(--border);
 }
 
 @media (max-width: 1024px) {
   .header {
-    padding: 1.5rem 2rem;
+    padding: 1rem 2rem;
     gap: 1.5rem;
   }
 
@@ -68,7 +67,7 @@
 
 @media (max-width: 600px) {
   .header {
-    padding: 1rem 1.5rem;
+    padding: .9rem 1rem;
     gap: 1rem;
     flex-wrap: wrap;
   }

@@ -135,7 +135,12 @@ def run_pipeline(config: PipelineConfig, quiet: bool = False) -> PipelineResult:
             ledger.add("signal_detection", reason, count)
 
     # ---- 6. normalized report export ----------------------------------------
-    normalized_records = build_normalized_reports(pairs, cases, config)
+    normalized_records = build_normalized_reports(
+    pairs,
+    cases,
+    raw.outc,
+    config,
+)
     _stage("normalized report rows=%d" % len(normalized_records), quiet, start)
 
     # ---- 7. write artifacts --------------------------------------------------

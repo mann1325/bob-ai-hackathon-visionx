@@ -48,11 +48,13 @@ class GroqClient:
             "Your task is to explain candidate drug safety signals to human safety reviewers.\n\n"
             "STRICT RULES:\n"
             "1. Base your explanation ONLY on the structured facts provided by the user.\n"
-            "2. Do NOT invent, recalculate, or alter any statistical metrics (PRR, ROR, report counts).\n"
-            "3. Do NOT declare confirmed causality or determine that a drug is definitively unsafe.\n"
-            "4. Clearly articulate known data limitations and potential reporting biases.\n"
-            "5. Suggest actionable, practical questions for human pharmacovigilance investigation.\n"
-            "6. You MUST respond in valid JSON format with the following keys:\n"
+            "2. Treat every non-null deterministic value as authoritative. Never say an explicitly supplied field is unavailable.\n"
+            "3. The exact marker 'NOT AVAILABLE IN EVIDENCE BUNDLE' means the field was not supplied; do not infer a value.\n"
+            "4. Do NOT invent, recalculate, or alter any statistical metrics (PRR, ROR, report counts, chi-square).\n"
+            "5. Do NOT declare confirmed causality, drug unsafety, a regulatory violation, or a regulatory decision.\n"
+            "6. Clearly distinguish observed deterministic evidence, limitations, and AI interpretation/questions.\n"
+            "7. Suggest actionable, practical questions for human pharmacovigilance investigation.\n"
+            "8. You MUST respond in valid JSON format with the following keys:\n"
             "   - 'why_flagged': string explaining why this drug-event pair is a candidate signal\n"
             "   - 'evidence_summary': string summarizing the quantitative and qualitative evidence\n"
             "   - 'limitations': array of strings identifying data quality / reporting limitations\n"
@@ -60,20 +62,43 @@ class GroqClient:
         )
 
     def _build_user_prompt(self, facts: Dict[str, Any]) -> str:
+        quality = facts.get("case_quality") or {}
+        unavailable = "NOT AVAILABLE IN EVIDENCE BUNDLE"
+        duplicate_sample = facts.get("duplicate_sample", facts.get("duplicate_rationale_sample"))
+        def value(field: str) -> Any:
+            return facts.get(field) if facts.get(field) is not None else unavailable
+
         return (
-            "Here are the backend-computed structured facts for the candidate safety signal:\n\n"
-            f"Drug Name: {facts.get('drug_name', 'UNKNOWN')}\n"
-            f"Adverse Event: {facts.get('event_name', 'UNKNOWN')}\n"
-            f"Supporting Report Count: {facts.get('report_count', 0)}\n"
-            f"PRR (Proportional Reporting Ratio): {facts.get('prr', 'N/A')}\n"
-            f"ROR (Reporting Odds Ratio): {facts.get('ror', 'N/A')}\n"
-            f"Trend Score: {facts.get('trend_score', 'N/A')}\n"
-            f"Case Quality Score: {facts.get('quality_score', 'N/A')}\n"
-            f"Case Quality Flags: {', '.join(facts.get('quality_flags', [])) or 'None'}\n"
-            f"Potential Duplicate Candidates Count: {facts.get('duplicate_count', 0)}\n"
-            f"Representative Duplicate Rationales (sample only; not exhaustive): "
-            f"{', '.join(facts.get('duplicate_rationale_sample', [])) or 'None'}\n"
-            f"Known Limitations: {', '.join(facts.get('known_limitations', [])) or 'Spontaneous reporting bias'}\n\n"
+            "Here are the backend-computed structured facts for the candidate safety signal. "
+            "DATA + CODE = FACTS; AI = EXPLANATION.\n\n"
+            f"Signal ID: {value('signal_id')}\n"
+            f"Drug Name: {value('drug_name')}\n"
+            f"Adverse Event: {value('event_name')}\n"
+            f"Candidate Status: {value('candidate_status')}\n"
+            f"Priority: {value('priority_level')}\n"
+            f"Risk Score: {value('risk_score')}\n"
+            f"Dataset Release: {value('dataset_version')}\n"
+            f"Supporting Report Count: {value('report_count')}\n"
+            f"PRR (Proportional Reporting Ratio): {value('prr')}\n"
+            f"ROR (Reporting Odds Ratio): {value('ror')}\n"
+            f"Chi-square (Pearson, existing calculation): {value('chi_square')}\n"
+            f"Contingency Table: {value('contingency_table')}\n"
+            f"Trend Score: {value('trend_score')}\n"
+            f"Trend Data: {value('trend_data')}\n"
+            f"Case Quality Score: {quality.get('quality_score', unavailable)}\n"
+            f"Case Quality Total Reports: {quality.get('total_reports', unavailable)}\n"
+            f"Missing Age Count: {quality.get('missing_age_count', unavailable)}\n"
+            f"Missing Sex Count: {quality.get('missing_sex_count', unavailable)}\n"
+            f"Missing Event Date Count: {quality.get('missing_date_count', unavailable)}\n"
+            f"Case Quality Flags: {', '.join(quality.get('quality_flags', [])) or unavailable}\n"
+            f"Case Quality Indicators: {quality.get('indicators', unavailable)}\n"
+            f"Potential Duplicate Candidates Count: {value('duplicate_count')}\n"
+            f"Potential Duplicate Sample (sample only; not exhaustive): {duplicate_sample if duplicate_sample else unavailable}\n"
+            f"Known Limitations: {value('known_limitations')}\n"
+            f"Potential Review Areas: {value('regulatory_review_areas')}\n"
+            f"Deterministic Rule Matches: {value('regulatory_rule_matches')}\n\n"
+            "The JSON below is the same deterministic context. Do not contradict it or calculate new metrics:\n"
+            f"{json.dumps(facts, sort_keys=True, default=str)}\n\n"
             "Please generate the structured explanation JSON."
         )
 
@@ -122,6 +147,44 @@ class GroqClient:
             logger.error("Error parsing Groq response: %s", exc)
             raise GroqAPIError("Failed to parse response from Groq API.") from exc
 
+    @staticmethod
+    def _deterministic_evidence_summary(facts: Dict[str, Any]) -> str:
+        """Return authoritative facts that must remain visible beside AI text."""
+        quality = facts.get("case_quality")
+        quality_text = "NOT AVAILABLE IN EVIDENCE BUNDLE"
+        if quality:
+            quality_text = (
+                f"score={quality.get('quality_score')}, "
+                f"reports={quality.get('total_reports')}, "
+                f"missing_age={quality.get('missing_age_count')}, "
+                f"missing_sex={quality.get('missing_sex_count')}, "
+                f"missing_event_date={quality.get('missing_date_count')}, "
+                f"flags={quality.get('quality_flags') or []}"
+            )
+        return (
+            f"Reports={facts.get('report_count')}; PRR={facts.get('prr')}; "
+            f"ROR={facts.get('ror')}; chi-square={facts.get('chi_square')}; "
+            f"case quality ({quality_text}); "
+            f"potential duplicate candidates={facts.get('duplicate_count')}; "
+            f"trend data={facts.get('trend_data') if facts.get('trend_data') is not None else 'NOT AVAILABLE IN EVIDENCE BUNDLE'}; "
+            f"potential review areas={len(facts.get('regulatory_review_areas') or [])}; "
+            f"deterministic rule matches={len(facts.get('regulatory_rule_matches') or [])}."
+        )
+
+    @staticmethod
+    def _filter_contradictory_limitations(limitations: List[str], facts: Dict[str, Any]) -> List[str]:
+        quality = facts.get("case_quality")
+        if not quality:
+            return limitations
+        filtered = []
+        for limitation in limitations:
+            lowered = limitation.lower()
+            mentions_quality = "quality" in lowered or "missing-field" in lowered or "missing field" in lowered
+            says_unavailable = "not available" in lowered or "unavailable" in lowered or "no case" in lowered
+            if not (mentions_quality and says_unavailable):
+                filtered.append(limitation)
+        return filtered
+
     def _parse_json_response(self, text: str, facts: Dict[str, Any]) -> Dict[str, Any]:
         """Extract and validate JSON fields from model output."""
         cleaned = text.strip()
@@ -141,9 +204,12 @@ class GroqClient:
                 "suggested_questions": ["Review detailed case narratives."],
             }
 
+        limitations = list(parsed.get("limitations", facts.get("known_limitations", [])))
+        evidence_summary = str(parsed.get("evidence_summary", "Summary of spontaneous reports."))
+        deterministic_summary = self._deterministic_evidence_summary(facts)
         return {
             "why_flagged": str(parsed.get("why_flagged", f"Elevated reporting for {facts.get('drug_name')} and {facts.get('event_name')}.")),
-            "evidence_summary": str(parsed.get("evidence_summary", "Summary of spontaneous reports.")),
-            "limitations": list(parsed.get("limitations", facts.get("known_limitations", []))),
+            "evidence_summary": f"Deterministic evidence: {deterministic_summary} AI interpretation: {evidence_summary}",
+            "limitations": self._filter_contradictory_limitations(limitations, facts),
             "suggested_questions": list(parsed.get("suggested_questions", [])),
         }

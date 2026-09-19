@@ -94,3 +94,6 @@ logs/
 .terraform/
 *.tfstate
 *.tfstate.backup
+
+.venv311/
+src/backend/signaltrace-dev.db

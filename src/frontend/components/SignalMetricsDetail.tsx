@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { ApiClient } from '../lib/api/client';
 import { SignalDetail, CaseQualityReport, DuplicateCandidate } from '../lib/api/types';
+import { EvidenceExplorer } from './EvidenceExplorer';
 import styles from './SignalMetricsDetail.module.css';
 
 interface SignalMetricsDetailProps {
@@ -49,6 +50,34 @@ function formatMatchedFields(fields: string[]): string {
     return labels[0] || '--';
   }
   return `${labels.slice(0, -1).join(', ')}, and ${labels[labels.length - 1]}`;
+}
+
+interface TrendPoint {
+  quarter: string;
+  count: number;
+}
+
+function parseTrendPoints(rawTrendData: Array<Record<string, unknown>> | null | undefined): TrendPoint[] {
+  if (!Array.isArray(rawTrendData)) {
+    return [];
+  }
+
+  const points: TrendPoint[] = [];
+  const seenQuarters = new Set<string>();
+
+  for (const entry of rawTrendData) {
+    const quarter = typeof entry.quarter === 'string' ? entry.quarter.trim() : '';
+    const count = typeof entry.count === 'number' || typeof entry.count === 'string'
+      ? Number(entry.count)
+      : NaN;
+    if (!/^\d{4}Q[1-4]$/.test(quarter) || !Number.isFinite(count) || count < 0 || seenQuarters.has(quarter)) {
+      continue;
+    }
+    seenQuarters.add(quarter);
+    points.push({ quarter, count });
+  }
+
+  return points.sort((a, b) => a.quarter.localeCompare(b.quarter));
 }
 
 export function SignalMetricsDetail({ apiClient, signalId }: SignalMetricsDetailProps) {
@@ -104,6 +133,8 @@ export function SignalMetricsDetail({ apiClient, signalId }: SignalMetricsDetail
   const displayedCandidates = dupesData
     ? dupesExpanded ? dupesData : dupesData.slice(0, 3)
     : [];
+  const trendPoints = parseTrendPoints(signal?.metrics?.trend_data);
+  const maxTrendCount = trendPoints.reduce((maximum, point) => Math.max(maximum, point.count), 0);
 
   const formattedImportDate = signal?.import_date
     ? new Date(`${signal.import_date}T00:00:00Z`).toLocaleDateString('en-GB', {
@@ -131,7 +162,7 @@ export function SignalMetricsDetail({ apiClient, signalId }: SignalMetricsDetail
       </header>
 
       <div className={styles.evidenceSummaryBox}>
-        <h3 className={styles.summaryTitle}>Why This Signal Was Flagged</h3>
+        <h3 className={styles.summaryTitle}>Why Was This Signal Flagged?</h3>
         <p className={styles.summaryParagraph}>
           The combination of <strong>{signal.drug_name}</strong> and <strong>{signal.event_name}</strong> generated a candidate signal driven by <strong>{signal.supporting_report_count}</strong> supporting reports. 
           Statistical modeling reveals a PRR of <strong>{signal.prr.toFixed(2)}</strong>
@@ -175,8 +206,18 @@ export function SignalMetricsDetail({ apiClient, signalId }: SignalMetricsDetail
                 </span>
               </div>
             </div>
+
+            <div className={styles.investigationSubsection}>
+              <h2 className={styles.subsectionHeading}>Supporting Evidence</h2>
+              <EvidenceExplorer
+                apiClient={apiClient}
+                signalId={signal.signal_id}
+                reportCount={signal.supporting_report_count}
+              />
+            </div>
             
             <div className={styles.expandableSection}>
+              <h2 className={styles.subsectionHeading}>Case Quality</h2>
               <button className={styles.expandBtn} onClick={handleToggleQuality}>
                 <h3>Case Quality Analysis</h3>
                 <span>{qualityOpen ? '▼' : '►'}</span>
@@ -229,6 +270,35 @@ export function SignalMetricsDetail({ apiClient, signalId }: SignalMetricsDetail
                 </div>
               )}
             </div>
+
+            <section className={styles.trendSection} aria-labelledby="reporting-trend-heading">
+              <h2 id="reporting-trend-heading" className={styles.subsectionHeading}>Reporting Trend</h2>
+              <p className={styles.trendDescription}>
+                Shows how reports for this drug-event pair were reported over time.
+              </p>
+              {trendPoints.length < 2 ? (
+                <div className={styles.trendUnavailable}>
+                  <p>No quarter-level reporting series is available for this signal.</p>
+                  <p>Reporting patterns do not establish causality.</p>
+                </div>
+              ) : (
+                <div className={styles.trendVisualization}>
+                  {trendPoints.map((point) => (
+                    <div className={styles.trendRow} key={point.quarter}>
+                      <span className={styles.trendQuarter}>{point.quarter.slice(0, 4)} Q{point.quarter.slice(5)}</span>
+                      <span className={styles.trendBarTrack}>
+                        <span
+                          className={styles.trendBar}
+                          style={{ width: `${maxTrendCount > 0 ? (point.count / maxTrendCount) * 100 : 0}%` }}
+                        />
+                      </span>
+                      <span className={styles.trendCount}>{point.count}</span>
+                    </div>
+                  ))}
+                  <p className={styles.trendDisclaimer}>Reporting patterns do not establish causality.</p>
+                </div>
+              )}
+            </section>
           </div>
         </section>
 
@@ -253,7 +323,8 @@ export function SignalMetricsDetail({ apiClient, signalId }: SignalMetricsDetail
               </div>
             </div>
 
-            <div className={styles.expandableSection} style={{ marginTop: '2rem' }}>
+            <div className={styles.expandableSection}>
+              <h2 className={styles.subsectionHeading}>Duplicate Triage</h2>
               <button className={styles.expandBtn} onClick={handleToggleDupes}>
                 <h3>Potential Duplicates Engine</h3>
                 <span>{dupesOpen ? '▼' : '►'}</span>

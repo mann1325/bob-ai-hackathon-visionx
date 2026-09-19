@@ -1,5 +1,5 @@
 import { ApiClient } from './client';
-import { Signal, SignalListParams, SignalListResponse, DocumentAnalysis, DocumentUpload, ExplanationResponse, CaseQualityReport, DuplicateCandidate, LiveSearchResponse, RegulatoryImpact } from './types';
+import { Signal, SignalListParams, SignalListResponse, DocumentAnalysis, DocumentUpload, ExplanationResponse, CaseQualityReport, DuplicateCandidate, LiveSearchResponse, RegulatoryImpact, ProcessedReport, SupportingReportList, HumanReview, HumanReviewUpdate, InvestigationSummary } from './types';
 
 const MOCK_SIGNALS: Signal[] = [
   {
@@ -46,6 +46,55 @@ const MOCK_SIGNALS: Signal[] = [
   }
 ];
 
+const MOCK_REPORTS: Record<string, ProcessedReport[]> = {
+  'SIG-1001': [
+    {
+      report_id: 'FAERS-1001',
+      drug_name: 'Paxlovid',
+      reactions: ['Hepatotoxicity', 'Nausea'],
+      patient_age: 62,
+      patient_sex: 'M',
+      event_date: '2024-01-15',
+      seriousness: 'Serious',
+      seriousness_codes: ['DE'],
+      report_quarter: 'v2.1',
+      source: 'FDA_FAERS',
+    },
+    {
+      report_id: 'FAERS-1002',
+      drug_name: 'Paxlovid',
+      reactions: ['Hepatotoxicity'],
+      patient_age: null,
+      patient_sex: null,
+      event_date: null,
+      seriousness: 'Unknown',
+      seriousness_codes: [],
+      report_quarter: 'v2.1',
+      source: 'FDA_FAERS',
+    },
+  ],
+};
+
+const MOCK_REVIEWS: Record<string, HumanReview> = {};
+
+const emptyReview = (signalId: string): HumanReview => ({
+  review_id: null,
+  signal_id: signalId,
+  review_status: 'not_started',
+  evidence_checklist: {
+    supporting_reports_reviewed: false,
+    case_quality_reviewed: false,
+    reporting_trend_reviewed: false,
+    duplicates_reviewed: false,
+    ai_explanation_reviewed: false,
+    regulatory_documents_reviewed: false,
+  },
+  reviewer_notes: '',
+  reviewer_conclusion: '',
+  created_at: null,
+  updated_at: null,
+});
+
 export class MockAdapter implements ApiClient {
   async listSignals(params?: SignalListParams): Promise<SignalListResponse> {
     void params;
@@ -64,6 +113,84 @@ export class MockAdapter implements ApiClient {
         const signal = MOCK_SIGNALS.find(s => s.signal_id === signalId);
         resolve(signal || null);
       }, 500);
+    });
+  }
+
+  async getInvestigationSummary(signalId: string): Promise<InvestigationSummary> {
+    return new Promise(resolve => setTimeout(() => {
+      const signal = MOCK_SIGNALS.find(item => item.signal_id === signalId) || MOCK_SIGNALS[0];
+      resolve({
+        signal_id: signal.signal_id,
+        drug_name: signal.drug_name,
+        event_name: signal.event_name,
+        dataset_version: signal.dataset_version,
+        candidate_status: signal.candidate_status,
+        priority_level: signal.priority_level,
+        supporting_report_count: signal.supporting_report_count,
+        prr: signal.prr,
+        ror: signal.ror,
+        chi_square: null,
+        trend_score: signal.trend_score,
+        trend_data: null,
+        why_flagged: `The signal is supported by ${signal.supporting_report_count} reports with a PRR of ${signal.prr.toFixed(2)}.`,
+        known_limitations: ['Spontaneous reporting bias.'],
+        case_quality: null,
+        duplicate_count: 0,
+        duplicates: [],
+        ai_explanation: null,
+        regulatory_review_areas: [],
+        regulatory_rule_matches: [],
+        documents: [],
+        human_review: MOCK_REVIEWS[signalId] || emptyReview(signalId),
+        human_review_required: true,
+      });
+    }, 250));
+  }
+
+  async getReview(signalId: string): Promise<HumanReview> {
+    return new Promise(resolve => setTimeout(() => resolve(MOCK_REVIEWS[signalId] || emptyReview(signalId)), 250));
+  }
+
+  async saveReview(signalId: string, review: HumanReviewUpdate): Promise<HumanReview> {
+    return new Promise(resolve => setTimeout(() => {
+      const now = new Date().toISOString();
+      const saved = {
+        ...emptyReview(signalId),
+        ...review,
+        review_id: MOCK_REVIEWS[signalId]?.review_id || `MOCK-REV-${signalId}`,
+        created_at: MOCK_REVIEWS[signalId]?.created_at || now,
+        updated_at: now,
+      };
+      MOCK_REVIEWS[signalId] = saved;
+      resolve(saved);
+    }, 350));
+  }
+
+  async listSupportingReports(signalId: string, page = 1, pageSize = 10): Promise<SupportingReportList> {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const reports = MOCK_REPORTS[signalId] || [];
+        const offset = (page - 1) * pageSize;
+        resolve({
+          reports: reports.slice(offset, offset + pageSize),
+          total: reports.length,
+          page,
+          page_size: pageSize,
+        });
+      }, 500);
+    });
+  }
+
+  async getReport(reportId: string): Promise<ProcessedReport> {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const report = Object.values(MOCK_REPORTS).flat().find(item => item.report_id === reportId);
+        if (report) {
+          resolve(report);
+        } else {
+          reject(new Error('Report not found.'));
+        }
+      }, 400);
     });
   }
 

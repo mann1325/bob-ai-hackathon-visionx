@@ -7,7 +7,9 @@
     "report_id",
     "drug_name",
     "reactions",
-    "report_quarter"
+    "report_quarter",
+    "seriousness",
+    "seriousness_codes"
   ],
   "properties": {
     "report_id": {
@@ -39,6 +41,20 @@
         "string",
         "null"
       ]
+    },
+    "seriousness": {
+      "type": "string",
+      "enum": [
+        "Serious",
+        "Non-serious",
+        "Unknown"
+      ]
+    },
+    "seriousness_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "report_quarter": {
       "type": "string"

@@ -41,8 +41,14 @@ class EvidenceBundle(BaseModel):
     signal_id: str
     drug_name: str
     event_name: str
+    candidate_status: str = "candidate"
+    priority_level: Optional[str] = None
+    risk_score: Optional[float] = None
+    dataset_version: Optional[str] = None
     metrics: Dict[str, Any] = Field(default_factory=dict)
     case_quality: Optional[CaseQualityReport] = None
     potential_duplicates: List[DuplicateCandidate] = Field(default_factory=list)
     known_limitations: List[str] = Field(default_factory=list)
+    regulatory_review_areas: List[Dict[str, Any]] = Field(default_factory=list)
+    regulatory_rule_matches: List[Dict[str, Any]] = Field(default_factory=list)
     human_review_required: bool = True

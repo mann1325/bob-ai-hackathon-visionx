@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
+from ml.trend_scorer import compute_trend_score
 from rules.engine import evaluate_regulatory_impact
 from services.explanation_service import generate_signal_explanation
 from services.investigation_service import (
@@ -14,6 +15,7 @@ from services.signal_service import (
     get_signal_detail,
     get_signal_evidence,
     get_signal_metrics,
+    list_supporting_reports,
     list_signals,
 )
 from shared.schemas.ai import GroqExplanation
@@ -24,7 +26,12 @@ from shared.schemas.evidence import (
     EvidenceBundle,
 )
 from shared.schemas.regulatory import RegulatoryImpact
-from shared.schemas.signal import SignalDetail, SignalMetrics, SignalSummary
+from shared.schemas.signal import (
+    SignalDetail,
+    SignalMetrics,
+    SignalSummary,
+    SupportingReportList,
+)
 
 router = APIRouter(prefix="/signals", tags=["signals"])
 
@@ -77,7 +84,13 @@ def get_signal_by_id(
             status_code=404,
             detail=f"Candidate signal '{signal_id}' not found.",
         )
-    return signal
+    return signal.model_copy(
+        update={
+            "trend_score": compute_trend_score(
+                signal.metrics.trend_data if signal.metrics else None
+            )
+        }
+    )
 
 
 @router.get("/{signal_id}/metrics", response_model=SignalMetrics)
@@ -93,6 +106,23 @@ def get_signal_metrics_by_id(
             detail=f"Metrics for signal '{signal_id}' not found.",
         )
     return metrics
+
+
+@router.get("/{signal_id}/reports", response_model=SupportingReportList)
+def get_signal_reports(
+    signal_id: str,
+    page: int = Query(1, ge=1, description="Report page number"),
+    page_size: int = Query(50, ge=1, le=100, description="Reports per page"),
+    db: Session = Depends(get_db),
+) -> SupportingReportList:
+    """List stored FAERS reports supporting a candidate signal."""
+    reports = list_supporting_reports(db, signal_id, page=page, page_size=page_size)
+    if reports is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Candidate signal '{signal_id}' not found.",
+        )
+    return reports
 
 
 @router.get("/{signal_id}/evidence", response_model=EvidenceBundle)
@@ -153,6 +183,7 @@ def explain_signal(
             status_code=404,
             detail=f"Signal '{signal_id}' not found for explanation.",
         )
+    db.commit()
     return explanation
 
 
