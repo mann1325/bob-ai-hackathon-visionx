@@ -20,7 +20,7 @@
 .signalTable td { padding: .8rem 1rem; border-bottom: 1px solid var(--border); color: var(--foreground); font-size: .82rem; }
 .clickableRow { cursor: pointer; }
 .clickableRow:hover { background: #f4f8fc; }
-.groupDivider { border-top: 2px solid var(--royal-blue); }
+.groupDivider { border-top: 2px solid var(--border-strong); }
 .identityCell { max-width: 20rem; }
 .identityCell strong, .identityCell span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .identityCell strong { color: var(--navy); font-weight: 600; }
