@@ -7,16 +7,17 @@ import { SignalMetricsDetail } from './SignalMetricsDetail';
 import { RegulatoryPanel } from './RegulatoryPanel';
 import { DocumentsModal } from './ui/DocumentsModal';
 import { HumanReviewPanel } from './HumanReviewPanel';
+import { SignalVisualization } from './SignalVisualization';
 import { InvestigationSummary } from './InvestigationSummary';
 import { EvidenceExplorer } from './EvidenceExplorer';
 import styles from './SignalDetail.module.css';
 
 interface SignalDetailProps { signal: Signal; onBack: () => void; }
-type InvestigationTab = 'overview' | 'evidence' | 'quality' | 'regulatory' | 'documents' | 'review';
+type InvestigationTab = 'overview' | 'evidence' | 'quality' | 'regulatory' | 'documents' | 'review' | 'visualization';
 
 const tabs: Array<{ id: InvestigationTab; label: string }> = [
   { id: 'overview', label: 'Overview' }, { id: 'evidence', label: 'Evidence' }, { id: 'quality', label: 'Quality / Duplicates' },
-  { id: 'regulatory', label: 'Regulatory' }, { id: 'review', label: 'Human Review' },
+  { id: 'regulatory', label: 'Regulatory' }, { id: 'review', label: 'Human Review' }, { id: 'visualization', label: 'Signal Visualization' },
 ];
 
 export function SignalDetail({ signal, onBack }: SignalDetailProps) {
@@ -54,6 +55,7 @@ export function SignalDetail({ signal, onBack }: SignalDetailProps) {
         <section className={styles.section} aria-labelledby="quality-heading" hidden={activeTab !== 'quality'} aria-hidden={activeTab !== 'quality'}><div className={styles.sectionHeader}><div><p className={styles.eyebrow}>Data integrity and triage</p><h2 id="quality-heading">Quality and duplicates</h2></div></div><SignalMetricsDetail signalId={signal.signal_id} apiClient={apiClient} /></section>
         <section className={styles.section} aria-labelledby="regulatory-heading" hidden={activeTab !== 'regulatory'} aria-hidden={activeTab !== 'regulatory'}><div className={styles.sectionHeader}><div><p className={styles.eyebrow}>Deterministic rule mapping</p><h2 id="regulatory-heading">Regulatory impact</h2></div><span className={styles.sectionHint}>Potential review areas only</span></div><RegulatoryPanel signalId={signal.signal_id} apiClient={apiClient} /></section>
         <section className={styles.section} aria-labelledby="review-heading" hidden={activeTab !== 'review'} aria-hidden={activeTab !== 'review'}><div className={styles.sectionHeader}><div><p className={styles.eyebrow}>Final decision workflow</p><h2 id="review-heading">Human review</h2></div><span className={styles.advisory}>Reviewer-controlled assessment</span></div><HumanReviewPanel signalId={signal.signal_id} apiClient={apiClient} /></section>
+        <section className={styles.section} aria-labelledby="signal-visualization-heading" hidden={activeTab !== 'visualization'} aria-hidden={activeTab !== 'visualization'}><SignalVisualization /></section>
       </main>
       </div>
       <DocumentsModal view={modalView} onClose={() => setModalView(null)} signalId={signal.signal_id} apiClient={apiClient} />

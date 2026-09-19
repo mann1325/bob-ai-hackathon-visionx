@@ -1,0 +1,43 @@
+.panel {
+  padding: 1.5rem;
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 19, 108, 0.08);
+  border-radius: var(--border-radius-card);
+  box-shadow: var(--shadow-diffuse);
+}
+
+.header, .graphHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.header { margin-bottom: 1.25rem; }
+.eyebrow { margin: 0 0 .3rem; color: var(--royal-blue); font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.header h2 { margin: 0; color: var(--navy); font-size: 1.25rem; }
+.description, .graphHeader p { margin: .35rem 0 0; color: var(--text-muted); font-size: .78rem; line-height: 1.45; }
+.graphCard { padding: 1rem; background: var(--background-alt); border: 1px solid rgba(0, 19, 108, 0.08); border-radius: var(--border-radius-card); }
+.graphHeader { align-items: center; }
+.graphHeader h3 { margin: 0; color: var(--navy); font-size: .98rem; }
+.thresholdKey { display: inline-flex; align-items: center; gap: .4rem; color: var(--text-muted); font-size: .68rem; white-space: nowrap; }
+.thresholdKey i { display: inline-block; width: 1.2rem; border-top: 2px dashed #D97706; }
+.chartFrame { position: relative; margin-top: .75rem; padding: .25rem 0 1.2rem; }
+.chart { display: block; width: 100%; height: auto; min-height: 300px; overflow: visible; }
+.axis { stroke: #94A3B8; stroke-width: 1; }
+.thresholdLine { stroke: #D97706; stroke-dasharray: 5 5; stroke-width: 1.5; }
+.thresholdLabel { fill: #B45309; font-size: 11px; font-weight: 800; }
+.tick { fill: var(--text-muted); font-size: 11px; }
+.pointGroup { cursor: pointer; outline: none; }
+.pointGroup:focus .pointHalo, .pointGroup:hover .pointHalo { fill: rgba(0, 102, 255, .17); }
+.pointHalo { fill: rgba(0, 102, 255, .08); transition: fill .15s ease; }
+.point { fill: var(--royal-blue); stroke: #FFFFFF; stroke-width: 3; transition: fill .15s ease; }
+.pointSelected { fill: var(--navy); }
+.activityLine { stroke: var(--royal-blue); stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }
+.periodLabel { fill: var(--text-muted); font-size: 10px; }
+.xAxisLabel { position: absolute; bottom: 0; left: 50%; color: var(--text-muted); font-size: .68rem; font-weight: 800; transform: translateX(-50%); }
+.yAxisLabel { position: absolute; top: 50%; left: .05rem; color: var(--text-muted); font-size: .68rem; font-weight: 800; transform: translate(-50%, -50%) rotate(-90deg); transform-origin: center; }
+.tooltip { position: absolute; z-index: 2; display: flex; min-width: 175px; flex-direction: column; gap: .2rem; padding: .7rem .8rem; background: var(--navy); border: 1px solid rgba(255, 255, 255, .2); border-radius: 6px; box-shadow: var(--shadow-diffuse); color: #FFFFFF; font-size: .7rem; transform: translate(-50%, calc(-100% - .7rem)); }
+.tooltip strong { margin-bottom: .15rem; color: #FFFFFF; font-size: .72rem; }
+
+@media (max-width: 600px) {
+  .panel { padding: 1rem; }
+  .header, .graphHeader { flex-direction: column; }
+  .thresholdKey { align-self: flex-start; }
+  .chart { min-height: 250px; }
+  .yAxisLabel { left: .3rem; }
+}
