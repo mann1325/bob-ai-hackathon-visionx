@@ -19,7 +19,7 @@ export function SignalListTable({ apiClient, onSelectSignal }: SignalListTablePr
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
-  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' } | null>({ key: 'drug_name', direction: 'asc' });
   const hasLoadedSignals = useRef(false);
 
   useEffect(() => {
@@ -72,9 +72,12 @@ export function SignalListTable({ apiClient, onSelectSignal }: SignalListTablePr
       <table className={styles.signalTable}><thead><tr>
         {([['drug_name', 'Drug / Event'], ['supporting_report_count', 'Reports'], ['prr', 'PRR'], ['ror', 'ROR'], ['priority_level', 'Priority'], ['candidate_status', 'Review status']] as const).map(([key, label]) => <th key={key} onClick={() => requestSort(key)} aria-sort={sortConfig?.key === key ? sortConfig.direction === 'asc' ? 'ascending' : 'descending' : 'none'}>{label}{sortLabel(key)}</th>)}<th>Open</th>
       </tr></thead><tbody>
-        {isLoading ? Array.from({ length: 4 }).map((_, index) => <tr key={`skeleton-${index}`}><td colSpan={7}><div className={styles.skeletonPulse} /></td></tr>) : error ? <tr><td colSpan={7}><div className={styles.errorState} role="alert">{error}<button type="button" onClick={() => window.location.reload()}>Retry</button></div></td></tr> : visibleSignals.length === 0 ? <tr><td colSpan={7}><div className={styles.emptyState}><strong>No signals found</strong><span>Try changing your filters or search criteria.</span>{(searchTerm || priorityFilter !== 'all' || statusFilter !== 'all') && <button type="button" onClick={resetFilters}>Reset filters</button>}</div></td></tr> : visibleSignals.map((signal) => <tr key={signal.signal_id} className={styles.clickableRow} onClick={() => selectSignal(signal)}>
+        {isLoading ? Array.from({ length: 4 }).map((_, index) => <tr key={`skeleton-${index}`}><td colSpan={7}><div className={styles.skeletonPulse} /></td></tr>) : error ? <tr><td colSpan={7}><div className={styles.errorState} role="alert">{error}<button type="button" onClick={() => window.location.reload()}>Retry</button></div></td></tr> : visibleSignals.length === 0 ? <tr><td colSpan={7}><div className={styles.emptyState}><strong>No signals found</strong><span>Try changing your filters or search criteria.</span>{(searchTerm || priorityFilter !== 'all' || statusFilter !== 'all') && <button type="button" onClick={resetFilters}>Reset filters</button>}</div></td></tr> : visibleSignals.map((signal, index) => {
+          const isNewGroup = index > 0 && visibleSignals[index - 1].drug_name !== signal.drug_name;
+          return <tr key={signal.signal_id} className={`${styles.clickableRow} ${isNewGroup ? styles.groupDivider : ''}`} onClick={() => selectSignal(signal)}>
           <td className={styles.identityCell}><strong title={signal.drug_name}>{signal.drug_name}</strong><span title={signal.event_name}>{signal.event_name}</span></td><td className={styles.numericCell}>{signal.supporting_report_count.toLocaleString()}</td><td className={styles.numericCell}>{signal.prr.toFixed(2)}</td><td className={styles.numericCell}>{signal.ror?.toFixed(2) || '--'}</td><td><span className={`${styles.badge} ${styles[priorityClass(signal.priority_level)]}`}>{signal.priority_level || 'Unscored'}</span></td><td><span className={styles.statusBadge}>{signal.candidate_status.replace('_', ' ')}</span></td><td><button type="button" className={styles.openButton} onClick={(event) => { event.stopPropagation(); selectSignal(signal); }}>Open</button></td>
-        </tr>)}
+        </tr>;
+        })}
       </tbody></table>
       <div className={styles.mobileList}>{!isLoading && !error && visibleSignals.map((signal) => <article className={styles.mobileCard} key={signal.signal_id} onClick={() => selectSignal(signal)}>
         <div className={styles.mobileCardHeader}><div className={styles.identityCell}><strong>{signal.drug_name}</strong><span>{signal.event_name}</span></div><span className={`${styles.badge} ${styles[priorityClass(signal.priority_level)]}`}>{signal.priority_level || 'Unscored'}</span></div>

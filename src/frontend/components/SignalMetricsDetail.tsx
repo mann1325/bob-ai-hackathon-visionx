@@ -216,9 +216,10 @@ export function SignalMetricsDetail({ apiClient, signalId }: SignalMetricsDetail
               />
             </div>
             
-            <div className={styles.expandableSection}>
+            <div className={styles.investigationSubsection}>
               <h2 className={styles.subsectionHeading}>Case Quality</h2>
-              <button className={styles.expandBtn} onClick={handleToggleQuality}>
+              <div className={styles.expandableSection} style={{ marginTop: '0.5rem' }}>
+                <button className={styles.expandBtn} onClick={handleToggleQuality}>
                 <h3>Case Quality Analysis</h3>
                 <span>{qualityOpen ? '▼' : '►'}</span>
               </button>
@@ -269,6 +270,7 @@ export function SignalMetricsDetail({ apiClient, signalId }: SignalMetricsDetail
                   )}
                 </div>
               )}
+              </div>
             </div>
 
             <section className={styles.trendSection} aria-labelledby="reporting-trend-heading">
@@ -304,8 +306,9 @@ export function SignalMetricsDetail({ apiClient, signalId }: SignalMetricsDetail
 
         {/* Right Panel: AI Assessment */}
         <section className={styles.panelCard}>
-          <div className={`${styles.panelBanner} ${styles.mlAssisted}`}>
-            ⚠ ML-ASSISTED SYNTHESIS — HUMAN REVIEW REQUIRED 
+          <div className={`${styles.panelBanner} ${styles.mlAssisted}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            ML-ASSISTED SYNTHESIS — HUMAN REVIEW REQUIRED 
           </div>
           <div className={styles.panelContent}>
             <div className={styles.metricsGrid}>
@@ -323,9 +326,10 @@ export function SignalMetricsDetail({ apiClient, signalId }: SignalMetricsDetail
               </div>
             </div>
 
-            <div className={styles.expandableSection}>
+            <div className={styles.investigationSubsection}>
               <h2 className={styles.subsectionHeading}>Duplicate Triage</h2>
-              <button className={styles.expandBtn} onClick={handleToggleDupes}>
+              <div className={styles.expandableSection} style={{ marginTop: '0.5rem' }}>
+                <button className={styles.expandBtn} onClick={handleToggleDupes}>
                 <h3>Potential Duplicates Engine</h3>
                 <span>{dupesOpen ? '▼' : '►'}</span>
               </button>
@@ -407,6 +411,7 @@ export function SignalMetricsDetail({ apiClient, signalId }: SignalMetricsDetail
                   )}
                 </div>
               )}
+              </div>
             </div>
           </div>
         </section>

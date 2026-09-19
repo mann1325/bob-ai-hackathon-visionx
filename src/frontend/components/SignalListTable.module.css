@@ -20,6 +20,7 @@
 .signalTable td { padding: .8rem 1rem; border-bottom: 1px solid var(--border); color: var(--foreground); font-size: .82rem; }
 .clickableRow { cursor: pointer; }
 .clickableRow:hover { background: #f4f8fc; }
+.groupDivider { border-top: 2px solid var(--royal-blue); }
 .identityCell { max-width: 20rem; }
 .identityCell strong, .identityCell span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .identityCell strong { color: var(--navy); font-weight: 600; }
@@ -29,7 +30,8 @@
 .badge.critical { background: var(--danger-bg); border-color: #f3c4c0; color: var(--critical); }
 .badge.high { background: #fff4e5; border-color: #f4d2a7; color: var(--high); }
 .badge.medium { background: #edf5ff; border-color: #c6dcf5; color: var(--medium); }
-.badge.low, .badge.unscored { background: var(--background-alt); border-color: var(--border); color: var(--low); }
+.badge.low { background: #e8f5e9; border-color: #c8e6c9; color: #2e7d32; }
+.badge.unscored { background: #fff8e1; border-color: #ffecb3; color: #f57f17; }
 .statusBadge { color: var(--navy); font-size: .75rem; text-transform: capitalize; }
 .openButton { padding: .4rem .6rem; white-space: nowrap; }
 .openButton:hover, .resetButton:hover, .pagination button:hover:not(:disabled) { background: #edf5ff; border-color: #a8c6e5; }

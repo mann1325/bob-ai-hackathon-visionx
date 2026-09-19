@@ -27,7 +27,7 @@
 .iconBtn {
   background: #FFFFFF;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  color: #FFFFFF;
+  color: var(--navy);
   width: 24px;
   height: 24px;
   display: flex;
